@@ -1,0 +1,217 @@
+CREATE OR REPLACE TRIGGER "DTR_PIS_EMP_AUDIT" AFTER UPDATE ON M_PIS_EMPLOYEE REFERENCING NEW AS NEW OLD AS OLD FOR EACH ROW  
+DECLARE
+      l_column varchar2(100):=null;
+      l_table  varchar2(100):= null;
+      l_audit_id number(10) :=0;
+    BEGIN            
+      l_table  :='M_PIS_EMPLOYEE';
+      
+      IF :NEW.EMP_CODE ^=:OLD.EMP_CODE THEN
+        l_column :='EMP_CODE';
+        SELECT NVL(MAX(AUDIT_ID),0) INTO l_audit_id FROM T_PIS_AUDIT_DTL; 
+        l_audit_id:=l_audit_id+1;
+                
+        INSERT INTO T_PIS_AUDIT_DTL(AUDIT_ID,TABLE_NAME,COLUMN_NAME,EMP_ID,OLD_VALUE,
+               NEW_VALUE,CREATED_BY,CREATION_DATE) VALUES
+               (l_audit_id,l_table,l_column,:OLD.EMP_ID,:OLD.EMP_CODE,
+                :NEW.EMP_CODE,:NEW.MODIFIED_BY,SYSDATE);
+      END IF;
+      
+      IF :NEW.EMP_FIRST_NAME ^=:OLD.EMP_FIRST_NAME THEN
+        l_column :='EMP_FIRST_NAME';
+        SELECT NVL(MAX(AUDIT_ID),0) INTO l_audit_id FROM T_PIS_AUDIT_DTL; 
+        l_audit_id:=l_audit_id+1;
+                
+        INSERT INTO T_PIS_AUDIT_DTL(AUDIT_ID,TABLE_NAME,COLUMN_NAME,EMP_ID,OLD_VALUE,
+               NEW_VALUE,CREATED_BY,CREATION_DATE) VALUES
+               (l_audit_id,l_table,l_column,:OLD.EMP_ID,:OLD.EMP_FIRST_NAME,
+                :NEW.EMP_FIRST_NAME,:NEW.MODIFIED_BY,SYSDATE);
+      END IF;   
+      
+      IF :NEW.EMP_MID_NAME ^=:OLD.EMP_MID_NAME THEN
+        l_column :='EMP_MID_NAME';     
+        SELECT NVL(MAX(AUDIT_ID),0) INTO l_audit_id FROM T_PIS_AUDIT_DTL; 
+        l_audit_id:=l_audit_id+1;        
+        
+        INSERT INTO T_PIS_AUDIT_DTL(AUDIT_ID,TABLE_NAME,COLUMN_NAME,EMP_ID,OLD_VALUE,
+               NEW_VALUE,CREATED_BY,CREATION_DATE) VALUES
+               (l_audit_id,l_table,l_column,:OLD.EMP_ID,:OLD.EMP_MID_NAME,
+                :NEW.EMP_MID_NAME,:NEW.MODIFIED_BY,SYSDATE);
+      END IF; 
+      
+      IF :NEW.EMP_LAST_NAME ^=:OLD.EMP_LAST_NAME THEN
+        l_column :='EMP_LAST_NAME';     
+        SELECT NVL(MAX(AUDIT_ID),0) INTO l_audit_id FROM T_PIS_AUDIT_DTL; 
+        l_audit_id:=l_audit_id+1;        
+        
+        INSERT INTO T_PIS_AUDIT_DTL(AUDIT_ID,TABLE_NAME,COLUMN_NAME,EMP_ID,OLD_VALUE,
+               NEW_VALUE,CREATED_BY,CREATION_DATE) VALUES
+               (l_audit_id,l_table,l_column,:OLD.EMP_ID,:OLD.EMP_LAST_NAME,
+                :NEW.EMP_LAST_NAME,:NEW.MODIFIED_BY,SYSDATE);
+      END IF;
+      
+      IF :NEW.PARENT_NAME ^=:OLD.PARENT_NAME THEN
+        l_column :='PARENT_NAME';     
+        SELECT NVL(MAX(AUDIT_ID),0) INTO l_audit_id FROM T_PIS_AUDIT_DTL; 
+        l_audit_id:=l_audit_id+1;                
+  
+        INSERT INTO T_PIS_AUDIT_DTL(AUDIT_ID,TABLE_NAME,COLUMN_NAME,EMP_ID,OLD_VALUE,
+               NEW_VALUE,CREATED_BY,CREATION_DATE) VALUES
+               (l_audit_id,l_table,l_column,:OLD.EMP_ID,:OLD.PARENT_NAME,
+                :NEW.PARENT_NAME,:NEW.MODIFIED_BY,SYSDATE);
+      END IF;
+      
+      IF :NEW.SPOUSE_NAME ^=:OLD.SPOUSE_NAME THEN
+        l_column :='SPOUSE_NAME';     
+        SELECT NVL(MAX(AUDIT_ID),0) INTO l_audit_id FROM T_PIS_AUDIT_DTL; 
+        l_audit_id:=l_audit_id+1;   
+             
+        INSERT INTO T_PIS_AUDIT_DTL(AUDIT_ID,TABLE_NAME,COLUMN_NAME,EMP_ID,OLD_VALUE,
+               NEW_VALUE,CREATED_BY,CREATION_DATE) VALUES
+               (l_audit_id,l_table,l_column,:OLD.EMP_ID,:OLD.SPOUSE_NAME,
+                :NEW.SPOUSE_NAME,:NEW.MODIFIED_BY,SYSDATE);
+      END IF;
+      
+      IF :NEW.DATE_OF_BIRTH ^=:OLD.DATE_OF_BIRTH THEN
+        l_column :='DATE_OF_BIRTH';     
+        SELECT NVL(MAX(AUDIT_ID),0) INTO l_audit_id FROM T_PIS_AUDIT_DTL; 
+        l_audit_id:=l_audit_id+1;
+                
+        INSERT INTO T_PIS_AUDIT_DTL(AUDIT_ID,TABLE_NAME,COLUMN_NAME,EMP_ID,OLD_VALUE,
+               NEW_VALUE,CREATED_BY,CREATION_DATE) VALUES
+               (l_audit_id,l_table,l_column,:OLD.EMP_ID,:OLD.DATE_OF_BIRTH,
+                :NEW.DATE_OF_BIRTH,:NEW.MODIFIED_BY,SYSDATE);
+      END IF;
+      
+      IF :NEW.MARITAL_STATUS_CODE ^=:OLD.MARITAL_STATUS_CODE THEN
+        l_column :='MARITAL_STATUS_CODE';     
+        SELECT NVL(MAX(AUDIT_ID),0) INTO l_audit_id FROM T_PIS_AUDIT_DTL; 
+        l_audit_id:=l_audit_id+1;
+                
+        INSERT INTO T_PIS_AUDIT_DTL(AUDIT_ID,TABLE_NAME,COLUMN_NAME,EMP_ID,OLD_VALUE,
+               NEW_VALUE,CREATED_BY,CREATION_DATE) VALUES
+               (l_audit_id,l_table,l_column,:OLD.EMP_ID,:OLD.MARITAL_STATUS_CODE,
+                :NEW.MARITAL_STATUS_CODE,:NEW.MODIFIED_BY,SYSDATE);
+      END IF;
+      
+      IF :NEW.CASTE_CODE ^=:OLD.CASTE_CODE THEN
+        l_column :='CASTE_CODE';     
+        SELECT NVL(MAX(AUDIT_ID),0) INTO l_audit_id FROM T_PIS_AUDIT_DTL; 
+        l_audit_id:=l_audit_id+1;
+                
+        INSERT INTO T_PIS_AUDIT_DTL(AUDIT_ID,TABLE_NAME,COLUMN_NAME,EMP_ID,OLD_VALUE,
+               NEW_VALUE,CREATED_BY,CREATION_DATE) VALUES
+               (l_audit_id,l_table,l_column,:OLD.EMP_ID,:OLD.CASTE_CODE,
+                :NEW.CASTE_CODE,:NEW.MODIFIED_BY,SYSDATE);
+      END IF;
+      
+      IF :NEW.RELIGION_CODE ^=:OLD.RELIGION_CODE THEN
+        l_column :='RELIGION_CODE';     
+        SELECT NVL(MAX(AUDIT_ID),0) INTO l_audit_id FROM T_PIS_AUDIT_DTL; 
+        l_audit_id:=l_audit_id+1; 
+               
+        INSERT INTO T_PIS_AUDIT_DTL(AUDIT_ID,TABLE_NAME,COLUMN_NAME,EMP_ID,OLD_VALUE,
+               NEW_VALUE,CREATED_BY,CREATION_DATE) VALUES
+               (l_audit_id,l_table,l_column,:OLD.EMP_ID,:OLD.RELIGION_CODE,
+                :NEW.RELIGION_CODE,:NEW.MODIFIED_BY,SYSDATE);
+      END IF;
+      
+      IF :NEW.INIT_JOINING_DATE ^=:OLD.INIT_JOINING_DATE THEN
+        l_column :='INIT_JOINING_DATE';     
+        SELECT NVL(MAX(AUDIT_ID),0) INTO l_audit_id FROM T_PIS_AUDIT_DTL; 
+        l_audit_id:=l_audit_id+1;
+                
+        INSERT INTO T_PIS_AUDIT_DTL(AUDIT_ID,TABLE_NAME,COLUMN_NAME,EMP_ID,OLD_VALUE,
+               NEW_VALUE,CREATED_BY,CREATION_DATE) VALUES
+               (l_audit_id,l_table,l_column,:OLD.EMP_ID,:OLD.INIT_JOINING_DATE,
+                :NEW.INIT_JOINING_DATE,:NEW.MODIFIED_BY,SYSDATE);
+      END IF;
+
+      IF :NEW.TRANS_JOINING_DATE ^=:OLD.TRANS_JOINING_DATE THEN
+        l_column :='TRANS_JOINING_DATE';     
+        SELECT NVL(MAX(AUDIT_ID),0) INTO l_audit_id FROM T_PIS_AUDIT_DTL; 
+        l_audit_id:=l_audit_id+1;
+                
+        INSERT INTO T_PIS_AUDIT_DTL(AUDIT_ID,TABLE_NAME,COLUMN_NAME,EMP_ID,OLD_VALUE,
+               NEW_VALUE,CREATED_BY,CREATION_DATE) VALUES
+               (l_audit_id,l_table,l_column,:OLD.EMP_ID,:OLD.TRANS_JOINING_DATE,
+                :NEW.TRANS_JOINING_DATE,:NEW.MODIFIED_BY,SYSDATE);
+      END IF;
+
+      IF :NEW.PRE_LOCATION_ID ^=:OLD.PRE_LOCATION_ID THEN
+        l_column :='PRE_LOCATION_ID';     
+        SELECT NVL(MAX(AUDIT_ID),0) INTO l_audit_id FROM T_PIS_AUDIT_DTL; 
+        l_audit_id:=l_audit_id+1;
+                
+        INSERT INTO T_PIS_AUDIT_DTL(AUDIT_ID,TABLE_NAME,COLUMN_NAME,EMP_ID,OLD_VALUE,
+               NEW_VALUE,CREATED_BY,CREATION_DATE) VALUES
+               (l_audit_id,l_table,l_column,:OLD.EMP_ID,:OLD.PRE_LOCATION_ID,
+                :NEW.PRE_LOCATION_ID,:NEW.MODIFIED_BY,SYSDATE);
+      END IF;
+
+      IF :NEW.PRE_POSTING_LOC_ID ^=:OLD.PRE_POSTING_LOC_ID THEN
+        l_column :='PRE_POSTING_LOC_ID';     
+        SELECT NVL(MAX(AUDIT_ID),0) INTO l_audit_id FROM T_PIS_AUDIT_DTL; 
+        l_audit_id:=l_audit_id+1;
+                
+        INSERT INTO T_PIS_AUDIT_DTL(AUDIT_ID,TABLE_NAME,COLUMN_NAME,EMP_ID,OLD_VALUE,
+               NEW_VALUE,CREATED_BY,CREATION_DATE) VALUES
+               (l_audit_id,l_table,l_column,:OLD.EMP_ID,:OLD.PRE_POSTING_LOC_ID,
+                :NEW.PRE_POSTING_LOC_ID,:NEW.MODIFIED_BY,SYSDATE);
+      END IF;
+
+      IF :NEW.PRE_POSTING_LOC_DATE ^=:OLD.PRE_POSTING_LOC_DATE THEN
+        l_column :='PRE_POSTING_LOC_DATE';     
+        SELECT NVL(MAX(AUDIT_ID),0) INTO l_audit_id FROM T_PIS_AUDIT_DTL; 
+        l_audit_id:=l_audit_id+1;
+                
+        INSERT INTO T_PIS_AUDIT_DTL(AUDIT_ID,TABLE_NAME,COLUMN_NAME,EMP_ID,OLD_VALUE,
+               NEW_VALUE,CREATED_BY,CREATION_DATE) VALUES
+               (l_audit_id,l_table,l_column,:OLD.EMP_ID,:OLD.PRE_POSTING_LOC_DATE,
+                :NEW.PRE_POSTING_LOC_DATE,:NEW.MODIFIED_BY,SYSDATE);
+      END IF;
+
+      IF :NEW.DEEMED_DATE ^=:OLD.DEEMED_DATE THEN
+        l_column :='DEEMED_DATE';     
+        SELECT NVL(MAX(AUDIT_ID),0) INTO l_audit_id FROM T_PIS_AUDIT_DTL; 
+        l_audit_id:=l_audit_id+1;
+                
+        INSERT INTO T_PIS_AUDIT_DTL(AUDIT_ID,TABLE_NAME,COLUMN_NAME,EMP_ID,OLD_VALUE,
+               NEW_VALUE,CREATED_BY,CREATION_DATE) VALUES
+               (l_audit_id,l_table,l_column,:OLD.EMP_ID,:OLD.DEEMED_DATE,
+                :NEW.DEEMED_DATE,:NEW.MODIFIED_BY,SYSDATE);
+      END IF;
+      
+      IF :NEW.BANK_ACC_NUMBER ^=:OLD.BANK_ACC_NUMBER THEN
+        l_column :='BANK_ACC_NUMBER';     
+        SELECT NVL(MAX(AUDIT_ID),0) INTO l_audit_id FROM T_PIS_AUDIT_DTL; 
+        l_audit_id:=l_audit_id+1;
+                
+        INSERT INTO T_PIS_AUDIT_DTL(AUDIT_ID,TABLE_NAME,COLUMN_NAME,EMP_ID,OLD_VALUE,
+               NEW_VALUE,CREATED_BY,CREATION_DATE) VALUES
+               (l_audit_id,l_table,l_column,:OLD.EMP_ID,:OLD.BANK_ACC_NUMBER,
+                :NEW.BANK_ACC_NUMBER,:NEW.MODIFIED_BY,SYSDATE);
+      END IF;
+      
+      IF :NEW.PAN_NO ^=:OLD.PAN_NO THEN
+        l_column :='PAN_NO';     
+        SELECT NVL(MAX(AUDIT_ID),0) INTO l_audit_id FROM T_PIS_AUDIT_DTL; 
+        l_audit_id:=l_audit_id+1;
+                
+        INSERT INTO T_PIS_AUDIT_DTL(AUDIT_ID,TABLE_NAME,COLUMN_NAME,EMP_ID,OLD_VALUE,
+               NEW_VALUE,CREATED_BY,CREATION_DATE) VALUES
+               (l_audit_id,l_table,l_column,:OLD.EMP_ID,:OLD.PAN_NO,
+                :NEW.PAN_NO,:NEW.MODIFIED_BY,SYSDATE);
+      END IF;
+      
+      IF :NEW.GRADE_JOINING_DATE ^=:OLD.GRADE_JOINING_DATE THEN
+        l_column :='GRADE_JOINING_DATE';     
+        SELECT NVL(MAX(AUDIT_ID),0) INTO l_audit_id FROM T_PIS_AUDIT_DTL; 
+        l_audit_id:=l_audit_id+1;
+                
+        INSERT INTO T_PIS_AUDIT_DTL(AUDIT_ID,TABLE_NAME,COLUMN_NAME,EMP_ID,OLD_VALUE,
+               NEW_VALUE,CREATED_BY,CREATION_DATE) VALUES
+               (l_audit_id,l_table,l_column,:OLD.EMP_ID,:OLD.GRADE_JOINING_DATE,
+                :NEW.GRADE_JOINING_DATE,:NEW.MODIFIED_BY,SYSDATE);
+      END IF;
+END;

@@ -1,0 +1,20 @@
+create or replace procedure pass_ref_cur (p_deptno in employees.department_id%type,p_cursor out nocopy sys_refcursor)as
+begin
+open p_cursor for select last_name,employee_id,department_id from employees where department_id=p_deptno;
+end;
+
+set serveroutput on 
+declare
+l_cursor sys_refcursor;
+l_lname employees.last_name%type;
+l_deptno employees.department_id%type;
+l_empno employees.employee_id%type;
+begin
+pass_ref_cur(80,l_cursor);
+loop
+fetch l_cursor into l_lname,l_empno,l_deptno;
+exit when l_cursor%notfound;
+dbms_output.put_line(l_lname||' - '||l_deptno||' - '||l_empno);
+end loop;
+close l_cursor;
+end;

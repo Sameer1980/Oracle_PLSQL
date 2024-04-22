@@ -1,0 +1,18 @@
+create or replace function leap_year(p_year number) return varchar2 is
+remainder1  number(5,2);
+remainder2 number(5,2);
+remainder3 number(5,2);
+text1 varchar2(40):='is a leap year';
+text2 varchar2(40):='is not a leap year';
+begin
+remainder1:=mod(p_year,4);
+remainder2:=mod(p_year,400);
+remainder3:=mod(p_year,100);
+if((remainder1=0 and remainder3<>0) or remainder2=0)then
+return
+ text1;
+else
+return
+ text2;
+end if;
+end;

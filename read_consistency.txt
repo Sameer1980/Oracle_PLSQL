@@ -1,0 +1,10 @@
+Current Block Gets vs Consistent Read (cr) Block Gets
+
+'db block get' or 'current block get' are names used for current mode get. That is, it's the most up-to-date copy of the data in that block, as it is right now, or currently. There can only be one current copy of a block in the buffer cache at any time. Db current block gets generally are used when DML changes data in the database. In that case, row-level locks are implicitly taken on the updated rows. 
+
+'consistent get', 'consistent read get', 'cr get' are names used for consistent read get. That is, when Oracle gets the data in a block which is consistent with a given point in time, or SCN. The consistent get is at the heart of Oracle's read consistency mechanism. When blocks are fetched in order to satisfy a query result set, they are fetched in consistent mode. If no block in the buffer cache is consistent to the correct point in time, Oracle will (attempt to) reconstruct that block using the information in the rollback segments. If it fails to do so, that's when a query errors out with the much dreaded, much feared, and much misunderstood ORA-1555 "snapshot too old". 
+
+
+What is read consistent data?
+
+Oracle database blocks must contain data that is consistent with a point in time or SCN.

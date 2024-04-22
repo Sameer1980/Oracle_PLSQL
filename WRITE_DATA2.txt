@@ -1,0 +1,29 @@
+create or replace procedure write_data2 (dir varchar2,file_name varchar2)as
+file utl_file.file_type;
+select_stmt varchar2(100);
+cur integer;
+row_value varchar2(4000);
+ret integer;
+begin
+select_stmt:='select street_address||","||city||","||state_province  from locations' ;
+cur:=dbms_sql.open_cursor;
+dbms_sql.parse(cur,select_stmt,dbms_sql.native);
+ret:=dbms_sql.execute(cur);
+
+dbms_sql.define_column(cur,1,row_value,4000);
+file:=utl_file.fopen(upper(dir),file_name,'w',32767);
+
+loop
+ret:=dbms_sql.fetch_rows(cur);
+exit when ret=0;
+
+row_value :=null;
+dbms_sql.column_value(cur,1,row_value);
+utl_file.put_line(file,row_value);
+end loop;
+
+utl_file.fclose(file);
+dbms_sql.close_cursor(cur);
+end;
+
+

@@ -1,0 +1,13 @@
+set pagesize 0
+
+ set long 90000
+
+ set feedback off
+
+ set echo off 
+ spool HR_schema.sql 
+  SELECT DBMS_METADATA.GET_DDL('TABLE',u.table_name)
+     FROM USER_TABLES u;
+ SELECT DBMS_METADATA.GET_DDL('INDEX',u.index_name)
+     FROM USER_INDEXES u;
+ spool off;

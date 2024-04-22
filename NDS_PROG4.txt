@@ -1,0 +1,8 @@
+create or replace procedure get_emp (emp_id number) as
+stmt varchar2(200);
+emprec employees%rowtype;
+begin
+stmt:='select * from employees '||'where employee_id=:id';
+execute immediate stmt into emprec using emp_id;
+dbms_output.put_line('Employee_id: '||emprec.employee_id||' - '||emprec.first_name||' '||emprec.last_name);
+end;

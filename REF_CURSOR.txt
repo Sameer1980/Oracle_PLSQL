@@ -1,0 +1,36 @@
+create or replace procedure process_data as
+type emp_refcsr is ref cursor;
+type dept_refcsr is ref cursor;
+emp_ref emp_refcsr;
+dept_ref dept_refcsr;
+emprec employees%rowtype;
+deptrec departments%rowtype;
+v_count number(6);
+
+
+begin
+open emp_ref for 'select * from employees';
+dbms_output.put_line('Employees: ');
+dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+dbms_output.put_line('                                                                                                                                                                                                               ');
+loop
+fetch emp_ref into emprec;
+exit when emp_ref%notfound;
+dbms_output.put_line(emprec.employee_id||' - '||emprec.first_name||' '||emprec.last_name);
+v_count:=emp_ref%rowcount;
+end loop;
+dbms_output.put_line('Total count: '||v_count);
+close emp_ref;
+open dept_ref for 'select * from departments';
+dbms_output.put_line('                                                                                                                                                                                                               ');
+dbms_output.put_line('Departments: ');
+dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+dbms_output.put_line('                                                                                                                                                                                                               ');
+loop
+fetch dept_ref into deptrec;
+exit when dept_ref%notfound;
+dbms_output.put_line(deptrec.department_name);
+end loop;  
+close dept_ref;
+
+end;

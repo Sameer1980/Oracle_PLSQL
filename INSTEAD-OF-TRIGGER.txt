@@ -1,0 +1,30 @@
+create or replace trigger instead_of_trig1
+instead of delete on new_vu referencing old as old new as new
+for each row
+begin
+--delete from dept where department_name=old.department_name;
+delete from emp where employee_id=:old."employee ID";
+end;
+
+
+
+
+
+
+create or replace view NEW_VU
+as
+select 
+A.EMPLOYEE_ID "employee ID",
+(a.first_name||' '||A.LAST_NAME) "name",
+round(b.maxsal) "salary",
+a.job_id "job id",
+c.department_name "department"
+from 
+emp a,
+(select department_id,max(salary) maxsal from emp x group by department_id)b,
+dept c
+where a.department_id=b.department_id(+)
+and
+a.department_id=c.department_id(+)
+and a.salary=b.maxsal
+order by 5;

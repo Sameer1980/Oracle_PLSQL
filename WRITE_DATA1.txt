@@ -1,0 +1,38 @@
+SELECT * FROM ALL_DIRECTORIES
+
+grant create any directory  to hr --- FROM SYS
+
+CREATE OR REPLACE DIRECTORY dir1 AS 'C:\directory' -----  FROM HR
+
+
+GRANT READ ON DIRECTORY dir1 TO HR --- FROM SYS
+
+GRANT WRITE ON DIRECTORY dir1 TO HR --- FROM SYS
+
+grant execute on utl_file to hr ---- FROM SYS
+
+
+
+
+
+
+declare 
+  fhandle  utl_file.file_type;
+begin
+  fhandle := utl_file.fopen('DIR1',     -- File location
+               'file1.txt', -- File name
+               'w' -- Open mode: w = write. 
+                  );
+
+  utl_file.put(fhandle, 'Hello world!'
+                      || CHR(10));
+  utl_file.put(fhandle, 'Hello again!');
+
+  utl_file.fclose(fhandle);
+exception
+  when others then 
+    dbms_output.put_line('ERROR: ' || SQLCODE 
+                      || ' - ' || SQLERRM);
+    raise;
+end;
+/

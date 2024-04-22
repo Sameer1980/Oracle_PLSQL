@@ -1,0 +1,48 @@
+DATABASE TRANSACTION ISOLATION LEVEL .
+
+
+1)READ COMMITTED ISOLATION LEVEL (DEFAULT)
+2) SERIALIZABLE ISOLATION LEVEL
+3) READ-ONLY ISLOLATION LEVEL
+
+
+1)READ COMMITTED ISOLATION LEVEL:
+
+In the read committed isolation level, which is the default, every query executed by a transaction sees only data committed before the query—not the transaction—began. This level of isolation is appropriate for database environments in which few transactions are likely to conflict.
+
+EXAMPLE:-
+SAM'S SALARY IS 22000 IN THE DATABASE.
+
+TRANSACTION:
+
+UPDATE TAB SET SALARY =25000 WHERE ....... ;
+
+COMMIT;
+
+UPDATE TAB SET SALARY =32000 WHERE ....... ;
+
+COMMIT;
+
+UPDATE TAB SET SALARY =36000 WHERE ....... ;
+COMMIT;
+
+
+2) SERIALIZABLE ISOLATION LEVEL:
+
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+
+In the serialization isolation level, a transaction sees only changes committed at the time the transaction—not the query—began and changes made by the transaction itself. A serializable transaction operates in an environment that makes it appear as if no other users were modifying data in the database.
+
+SAM'S SALARY IS 22000 IN THE DATABASE.
+TRANSACTION:
+
+UPDATE TAB SET SALARY =25000 WHERE ....... ;
+
+COMMIT;
+
+UPDATE TAB SET SALARY =32000 WHERE ....... ;
+
+COMMIT;
+
+UPDATE TAB SET SALARY =36000 WHERE ....... ;
+COMMIT;

@@ -1,0 +1,37 @@
+create or replace procedure insert_row(tab_name varchar2,
+                                        id varchar2,
+                                        f_name varchar2,
+                                        l_name varchar2,
+                                        mail varchar2,
+                                        phn varchar2,
+                                        h_date varchar2,
+                                        j_id varchar2,
+                                        sal number,
+                                        comm number,
+                                        mgr varchar2,
+                                        dept_id varchar2
+                                        ) as
+csr_id integer;
+stmt varchar2(200);
+rows_added number;
+begin
+stmt:='insert into '||tab_name|| ' values(:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11) ';
+csr_id:=dbms_sql.open_cursor;
+dbms_sql.parse(csr_id,stmt,dbms_sql.native);
+dbms_sql.bind_variable(csr_id,':1',id);
+dbms_sql.bind_variable(csr_id,':2',f_name);
+dbms_sql.bind_variable(csr_id,':3',l_name);
+dbms_sql.bind_variable(csr_id,':4',mail);
+dbms_sql.bind_variable(csr_id,':5',phn);
+dbms_sql.bind_variable(csr_id,':6',h_date);
+dbms_sql.bind_variable(csr_id,':7',j_id);
+dbms_sql.bind_variable(csr_id,':8',sal);
+dbms_sql.bind_variable(csr_id,':9',comm);
+dbms_sql.bind_variable(csr_id,':10',mgr);
+dbms_sql.bind_variable(csr_id,':11',dept_id);
+rows_added:=dbms_sql.execute(csr_id);
+dbms_sql.close_cursor(csr_id);
+dbms_output.put_line(rows_added||' rows added');
+end;                                        
+
+/*select * from temp_emp*/

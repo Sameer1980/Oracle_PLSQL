@@ -1,0 +1,2196 @@
+{\rtf1\ansi\ansicpg1252\deff0\deflang1033{\fonttbl{\f0\fswiss\fcharset0 Arial;}}
+{\*\generator Msftedit 5.41.15.1507;}\viewkind4\uc1\pard\f0\fs20 Skip Headers\par
+Oracle\'ae Database Application Developer's Guide - Fundamentals\par
+10g Release 2 (10.2)\par
+B14251-01\tab\par
+Go to Documentation Home\par
+Home\tab Go to Book List\par
+Book List\tab Go to Table of Contents\par
+Contents\tab Go to Index\par
+Index\tab Go to Master Index\par
+Master Index\tab Go to Feedback page\par
+Contact Us\par
+Go to previous page\par
+Previous\tab Go to next page\par
+Next\par
+PDF \'b7 Mobi \'b7 ePub\par
+9 Coding Triggers\par
+\par
+Triggers are procedures that are stored in the database and are implicitly run, or fired, when something happens.\par
+\par
+Traditionally, triggers supported the execution of a PL/SQL block when an INSERT, UPDATE, or DELETE occurred on a table or view. Triggers support system and other data events on DATABASE and SCHEMA. Oracle Database also supports the execution of PL/SQL or Java procedures.\par
+\par
+This chapter discusses DML triggers, INSTEAD OF triggers, and system triggers (triggers on DATABASE and SCHEMA). Topics include:\par
+\par
+Designing Triggers\par
+\par
+Creating Triggers\par
+\par
+Coding the Trigger Body\par
+\par
+Compiling Triggers\par
+\par
+Modifying Triggers\par
+\par
+Enabling and Disabling Triggers\par
+\par
+Viewing Information About Triggers\par
+\par
+Examples of Trigger Applications\par
+\par
+Responding to System Events through Triggers\par
+\par
+Designing Triggers\par
+\par
+Use the following guidelines when designing your triggers:\par
+\par
+Use triggers to guarantee that when a specific operation is performed, related actions are performed.\par
+\par
+Do not define triggers that duplicate features already built into Oracle Database. For example, do not define triggers to reject bad data if you can do the same checking through declarative integrity constraints.\par
+\par
+Limit the size of triggers. If the logic for your trigger requires much more than 60 lines of PL/SQL code, it is better to include most of the code in a stored procedure and call the procedure from the trigger.\par
+\par
+Use triggers only for centralized, global operations that should be fired for the triggering statement, regardless of which user or database application issues the statement.\par
+\par
+Do not create recursive triggers. For example, creating an AFTER UPDATE statement trigger on the Emp_tab table that itself issues an UPDATE statement on Emp_tab, causes the trigger to fire recursively until it has run out of memory.\par
+\par
+Use triggers on DATABASE judiciously. They are executed for every user every time the event occurs on which the trigger is created.\par
+\par
+Creating Triggers\par
+\par
+Triggers are created using the CREATE TRIGGER statement. This statement can be used with any interactive tool, such as SQL*Plus or Enterprise Manager. When using an interactive tool, a single slash (/) on the last line is necessary to activate the CREATE TRIGGER statement.\par
+\par
+The following statement creates a trigger for the Emp_tab table.\par
+\par
+CREATE OR REPLACE TRIGGER Print_salary_changes\par
+  BEFORE DELETE OR INSERT OR UPDATE ON Emp_tab\par
+  FOR EACH ROW\par
+WHEN (new.Empno > 0)\par
+DECLARE\par
+    sal_diff number;\par
+BEGIN\par
+    sal_diff  := :new.sal  - :old.sal;\par
+    dbms_output.put('Old salary: ' || :old.sal);\par
+    dbms_output.put('  New salary: ' || :new.sal);\par
+    dbms_output.put_line('  Difference ' || sal_diff);\par
+END;\par
+/\par
+\par
+The trigger is fired when DML operations (INSERT, UPDATE, and DELETE statements) are performed on the table. You can choose what combination of operations should fire the trigger.\par
+\par
+Because the trigger uses the BEFORE keyword, it can access the new values before they go into the table, and can change the values if there is an easily-corrected error by assigning to :NEW.column_name. You might use the AFTER keyword if you want the trigger to query or change the same table, because triggers can only do that after the initial changes are applied and the table is back in a consistent state.\par
+\par
+Because the trigger uses the FOR EACH ROW clause, it might be executed multiple times, such as when updating or deleting multiple rows. You might omit this clause if you just want to record the fact that the operation occurred, but not examine the data for each row.\par
+\par
+Once the trigger is created, entering the following SQL statement:\par
+\par
+UPDATE Emp_tab SET sal = sal + 500.00 WHERE deptno = 10;\par
+\par
+fires the trigger once for each row that is updated, in each case printing the new salary, old salary, and the difference.\par
+\par
+The CREATE (or CREATE OR REPLACE) statement fails if any errors exist in the PL/SQL block.\par
+\par
+Note:\par
+The size of the trigger cannot be more than 32K.\par
+The following sections use this example to illustrate the way that parts of a trigger are specified.\par
+\par
+See Also:\par
+"Examples of Trigger Applications" for more realistic examples of CREATE TRIGGER statements\par
+Types of Triggers\par
+\par
+A trigger is either a stored PL/SQL block or a PL/SQL, C, or Java procedure associated with a table, view, schema, or the database itself. Oracle Database automatically executes a trigger when a specified event takes place, which may be in the form of a system event or a DML statement being issued against the table.\par
+\par
+Triggers can be:\par
+\par
+DML triggers on tables.\par
+\par
+INSTEAD OF triggers on views.\par
+\par
+System triggers on DATABASE or SCHEMA: With DATABASE, triggers fire for each event for all users; with SCHEMA, triggers fire for each event for that specific user.\par
+\par
+See Also:\par
+Oracle Database SQL Reference for information on trigger creation syntax\par
+Overview of System Events\par
+\par
+You can create triggers to be fired on any of the following:\par
+\par
+DML statements (DELETE, INSERT, UPDATE)\par
+\par
+DDL statements (CREATE, ALTER, DROP)\par
+\par
+Database operations (SERVERERROR, LOGON, LOGOFF, STARTUP, SHUTDOWN)\par
+\par
+Getting the Attributes of System Events\par
+\par
+You can get certain event-specific attributes when the trigger is fired.\par
+\par
+Creating a trigger on DATABASE implies that the triggering event is outside the scope of a user (for example, database STARTUP and SHUTDOWN), and it applies to all users (for example, a trigger created on LOGON event by the DBA).\par
+\par
+Creating a trigger on SCHEMA implies that the trigger is created in the current user's schema and is fired only for that user.\par
+\par
+For each trigger, publication can be specified on DML and system events.\par
+\par
+See Also:\par
+"Responding to System Events through Triggers"\par
+Naming Triggers\par
+\par
+Trigger names must be unique with respect to other triggers in the same schema. Trigger names do not need to be unique with respect to other schema objects, such as tables, views, and procedures. For example, a table and a trigger can have the same name (however, to avoid confusion, this is not recommended).\par
+\par
+When Is the Trigger Fired?\par
+\par
+A trigger is fired based on a triggering statement, which specifies:\par
+\par
+The SQL statement or the system event, database event, or DDL event that fires the trigger body. The options include DELETE, INSERT, and UPDATE. One, two, or all three of these options can be included in the triggering statement specification.\par
+\par
+The table, view, DATABASE, or SCHEMA associated with the trigger.\par
+\par
+Note:\par
+Exactly one table or view can be specified in the triggering statement. If the INSTEAD OF option is used, then the triggering statement may only specify a view; conversely, if a view is specified in the triggering statement, then only the INSTEAD OF option may be used.\par
+For example, the PRINT_SALARY_CHANGES trigger fires after any DELETE, INSERT, or UPDATE on the Emp_tab table. Any of the following statements trigger the PRINT_SALARY_CHANGES trigger given in the previous example:\par
+\par
+DELETE FROM Emp_tab;\par
+INSERT INTO Emp_tab VALUES ( ... );\par
+INSERT INTO Emp_tab SELECT ... FROM ... ;\par
+UPDATE Emp_tab SET ... ;\par
+Do Import and SQL*Loader Fire Triggers?\par
+\par
+INSERT triggers fire during SQL*Loader conventional loads. (For direct loads, triggers are disabled before the load.)\par
+\par
+The IGNORE parameter of the IMP command determines whether triggers fire during import operations:\par
+\par
+If IGNORE=N (default) and the table already exists, then import does not change the table and no existing triggers fire.\par
+\par
+If the table does not exist, then import creates and loads it before any triggers are defined, so again no triggers fire.\par
+\par
+If IGNORE=Y, then import loads rows into existing tables. Any existing triggers fire, and indexes are updated to account for the imported data.\par
+\par
+How Column Lists Affect UPDATE Triggers\par
+\par
+An UPDATE statement might include a list of columns. If a triggering statement includes a column list, the trigger is fired only when one of the specified columns is updated. If a triggering statement omits a column list, the trigger is fired when any column of the associated table is updated. A column list cannot be specified for INSERT or DELETE triggering statements.\par
+\par
+The previous example of the PRINT_SALARY_CHANGES trigger could include a column list in the triggering statement. For example:\par
+\par
+... BEFORE DELETE OR INSERT OR UPDATE OF ename ON Emp_tab ...\par
+\par
+Notes:\par
+\par
+You cannot specify a column list for UPDATE with INSTEAD OF triggers.\par
+\par
+If the column specified in the UPDATE OF clause is an object column, then the trigger is also fired if any of the attributes of the object are modified.\par
+\par
+You cannot specify UPDATE OF clauses on collection columns.\par
+\par
+Controlling When a Trigger Is Fired (BEFORE and AFTER Options)\par
+\par
+The BEFORE or AFTER option in the CREATE TRIGGER statement specifies exactly when to fire the trigger body in relation to the triggering statement that is being run. In a CREATE TRIGGER statement, the BEFORE or AFTER option is specified just before the triggering statement. For example, the PRINT_SALARY_CHANGES trigger in the previous example is a BEFORE trigger.\par
+\par
+In general, you use BEFORE or AFTER triggers to achieve the following results:\par
+\par
+Use BEFORE row triggers to modify the row before the row data is written to disk.\par
+\par
+Use AFTER row triggers to obtain, and perform operations, using the row ID.\par
+\par
+Note:\par
+BEFORE row triggers are slightly more efficient than AFTER row triggers. With AFTER row triggers, affected data blocks must be read (logical read, not physical read) once for the trigger and then again for the triggering statement. Alternatively, with BEFORE row triggers, the data blocks must be read only once for both the triggering statement and the trigger.\par
+BEFORE Triggers Fired Multiple Times\par
+\par
+If an UPDATE or DELETE statement detects a conflict with a concurrent UPDATE, then Oracle Database performs a transparent ROLLBACK to SAVEPOINT and restarts the update. This can occur many times before the statement completes successfully. Each time the statement is restarted, the BEFORE statement trigger is fired again. The rollback to savepoint does not undo changes to any package variables referenced in the trigger. Your package should include a counter variable to detect this situation.\par
+\par
+Ordering of Triggers\par
+\par
+A relational database does not guarantee the order of rows processed by a SQL statement. Therefore, do not create triggers that depend on the order in which rows are processed. For example, do not assign a value to a global package variable in a row trigger if the current value of the global variable is dependent on the row being processed by the row trigger. Also, if global package variables are updated within a trigger, then it is best to initialize those variables in a BEFORE statement trigger.\par
+\par
+When a statement in a trigger body causes another trigger to be fired, the triggers are said to be cascading. Oracle Database allows up to 32 triggers to cascade at any one time. However, you can effectively limit the number of trigger cascades using the initialization parameter OPEN_CURSORS, because a cursor must be opened for every execution of a trigger.\par
+\par
+Trigger Evaluation Order\par
+\par
+Although any trigger can run a sequence of operations either in-line or by calling procedures, using multiple triggers of the same type enhances database administration by permitting the modular installation of applications that have triggers on the same tables.\par
+\par
+Oracle Database executes all triggers of the same type before executing triggers of a different type. If you have multiple triggers of the same type on a single table, then Oracle Database chooses an arbitrary order to execute these triggers.\par
+\par
+See Also:\par
+Oracle Database Concepts for more information on the firing order of triggers\par
+Each subsequent trigger sees the changes made by the previously fired triggers. Each trigger can see the old and new values. The old values are the original values, and the new values are the current values, as set by the most recently fired UPDATE or INSERT trigger.\par
+\par
+To ensure that multiple triggered actions occur in a specific order, you must consolidate these actions into a single trigger (for example, by having the trigger call a series of procedures).\par
+\par
+Modifying Complex Views (INSTEAD OF Triggers)\par
+\par
+An updatable view is one that lets you perform DML on the underlying table. Some views are inherently updatable, but others are not because they were created with one or more of the constructs listed in"Views that Require INSTEAD OF Triggers".\par
+\par
+Any view that contains one of those constructs can be made updatable by using an INSTEAD OF trigger. INSTEAD OF triggers provide a transparent way of modifying views that cannot be modified directly through UPDATE, INSERT, and DELETE statements. These triggers are called INSTEAD OF triggers because, unlike other types of triggers, Oracle Database fires the trigger instead of executing the triggering statement. The trigger must determine what operation was intended and perform UPDATE, INSERT, or DELETE operations directly on the underlying tables.\par
+\par
+With an INSTEAD OF trigger, you can write normal UPDATE, INSERT, and DELETE statements against the view, and the INSTEAD OF trigger works invisibly in the background to make the right actions take place.\par
+\par
+INSTEAD OF triggers can only be activated for each row.\par
+\par
+See Also:\par
+"Firing Triggers One or Many Times (FOR EACH ROW Option)"\par
+Note:\par
+The INSTEAD OF option can only be used for triggers created over views.\par
+\par
+The BEFORE and AFTER options cannot be used for triggers created over views.\par
+\par
+The CHECK option for views is not enforced when inserts or updates to the view are done using INSTEAD OF triggers. The INSTEAD OF trigger body must enforce the check.\par
+\par
+Views that Require INSTEAD OF Triggers\par
+\par
+A view cannot be modified by UPDATE, INSERT, or DELETE statements if the view query contains any of the following constructs:\par
+\par
+A set operator\par
+\par
+A DISTINCT operator\par
+\par
+An aggregate or analytic function\par
+\par
+A GROUP BY, ORDER BY, MODEL, CONNECT BY, or START WITH clause\par
+\par
+A collection expression in a SELECT list\par
+\par
+A subquery in a SELECT list\par
+\par
+A subquery designated WITH READ ONLY\par
+\par
+Joins, with some exceptions, as documented in Oracle Database Administrator's Guide\par
+\par
+If a view contains pseudocolumns or expressions, then you can only update the view with an UPDATE statement that does not refer to any of the pseudocolumns or expressions.\par
+\par
+INSTEAD OF Trigger Example\par
+\par
+Note:\par
+You may need to set up the following data structures for this example to work:\par
+CREATE TABLE Project_tab (\par
+   Prj_level NUMBER, \par
+   Projno    NUMBER,\par
+   Resp_dept NUMBER);\par
+CREATE TABLE Emp_tab (\par
+   Empno     NUMBER NOT NULL,\par
+   Ename     VARCHAR2(10),\par
+   Job       VARCHAR2(9),\par
+   Mgr       NUMBER(4),\par
+   Hiredate  DATE,\par
+   Sal       NUMBER(7,2),\par
+   Comm      NUMBER(7,2),\par
+   Deptno    NUMBER(2) NOT NULL);\par
+   \par
+CREATE TABLE Dept_tab (\par
+   Deptno    NUMBER(2) NOT NULL,\par
+   Dname     VARCHAR2(14),\par
+   Loc       VARCHAR2(13),\par
+   Mgr_no    NUMBER,\par
+   Dept_type NUMBER);\par
+The following example shows an INSTEAD OF trigger for inserting rows into the MANAGER_INFO view.\par
+\par
+CREATE OR REPLACE VIEW manager_info AS\par
+    SELECT e.ename, e.empno, d.dept_type, d.deptno, p.prj_level,\par
+           p.projno\par
+        FROM   Emp_tab e, Dept_tab d, Project_tab p\par
+        WHERE  e.empno =  d.mgr_no\par
+        AND    d.deptno = p.resp_dept;\par
+\par
+CREATE OR REPLACE TRIGGER manager_info_insert\par
+INSTEAD OF INSERT ON manager_info\par
+REFERENCING NEW AS n                 -- new manager information\par
+\par
+FOR EACH ROW\par
+DECLARE\par
+   rowcnt number;\par
+BEGIN\par
+   SELECT COUNT(*) INTO rowcnt FROM Emp_tab WHERE empno = :n.empno;\par
+   IF rowcnt = 0  THEN\par
+       INSERT INTO Emp_tab (empno,ename) VALUES (:n.empno, :n.ename);\par
+   ELSE\par
+      UPDATE Emp_tab SET Emp_tab.ename = :n.ename\par
+         WHERE Emp_tab.empno = :n.empno;\par
+   END IF;\par
+   SELECT COUNT(*) INTO rowcnt FROM Dept_tab WHERE deptno = :n.deptno;\par
+   IF rowcnt = 0 THEN\par
+      INSERT INTO Dept_tab (deptno, dept_type) \par
+         VALUES(:n.deptno, :n.dept_type);\par
+   ELSE\par
+      UPDATE Dept_tab SET Dept_tab.dept_type = :n.dept_type\par
+         WHERE Dept_tab.deptno = :n.deptno;\par
+   END IF;\par
+   SELECT COUNT(*) INTO rowcnt FROM Project_tab \par
+      WHERE Project_tab.projno = :n.projno;\par
+   IF rowcnt = 0 THEN\par
+      INSERT INTO Project_tab (projno, prj_level) \par
+         VALUES(:n.projno, :n.prj_level);\par
+   ELSE\par
+      UPDATE Project_tab SET Project_tab.prj_level = :n.prj_level\par
+         WHERE Project_tab.projno = :n.projno;\par
+   END IF;\par
+END;\par
+ \par
+The actions shown for rows being inserted into the MANAGER_INFO view first test to see if appropriate rows already exist in the base tables from which MANAGER_INFO is derived. The actions then insert new rows or update existing rows, as appropriate. Similar triggers can specify appropriate actions for UPDATE and DELETE.\par
+\par
+Object Views and INSTEAD OF Triggers\par
+\par
+INSTEAD OF triggers provide the means to modify object view instances on the client-side through OCI calls.\par
+\par
+See Also:\par
+Oracle Call Interface Programmer's Guide\par
+To modify an object materialized by an object view in the client-side object cache and flush it back to the persistent store, you must specify INSTEAD OF triggers, unless the object view is modifiable. If the object is read only, then it is not necessary to define triggers to pin it.\par
+\par
+Triggers on Nested Table View Columns\par
+\par
+INSTEAD OF triggers can also be created over nested table view columns. These triggers provide a way of updating elements of the nested table. They fire for each nested table element being modified. The row correlation variables inside the trigger correspond to the nested table element. This type of trigger also provides an additional correlation name for accessing the parent row that contains the nested table being modified.\par
+\par
+Note:\par
+These triggers:\par
+Can only be defined over nested table columns in views.\par
+\par
+Fire only when the nested table elements are modified using the THE() or TABLE() clauses. They do not fire when a DML statement is performed on the view.\par
+\par
+For example, consider a department view that contains a nested table of employees.\par
+\par
+CREATE OR REPLACE VIEW Dept_view AS\par
+SELECT d.Deptno, d.Dept_type, d.Dept_name,\par
+   CAST (MULTISET ( SELECT e.Empno, e.Empname, e.Salary)\par
+      FROM Emp_tab e\par
+      WHERE e.Deptno = d.Deptno) AS Amp_list_ Emplist\par
+FROM Dept_tab d;\par
+\par
+The CAST (MULTISET..) operator creates a multi-set of employees for each department. If you want to modify the emplist column, which is the nested table of employees, then you can define an INSTEAD OF trigger over the column to handle the operation.\par
+\par
+The following example shows how an insert trigger might be written:\par
+\par
+CREATE OR REPLACE TRIGGER Dept_emplist_tr\par
+   INSTEAD OF INSERT ON NESTED TABLE Emplist OF Dept_view\par
+   REFERENCING NEW AS Employee\par
+      PARENT AS Department\par
+   FOR EACH ROW\par
+BEGIN\par
+-- The insert on the nested table is translated to an insert on the base table:\par
+   INSERT INTO Emp_tab VALUES (\par
+      :Employee.Empno, :Employee.Empname,:Employee.Salary, :Department.Deptno);\par
+END;\par
+\par
+Any INSERT into the nested table fires the trigger, and the Emp_tab table is filled with the correct values. For example:\par
+\par
+INSERT INTO TABLE (SELECT d.Emplist FROM Dept_view d WHERE Deptno = 10)\par
+   VALUES (1001, 'John Glenn', 10000);\par
+\par
+The :department.deptno correlation variable in this example would have a value of 10.\par
+\par
+Firing Triggers One or Many Times (FOR EACH ROW Option)\par
+\par
+The FOR EACH ROW option determines whether the trigger is a row trigger or a statement trigger. If you specify FOR EACH ROW, then the trigger fires once for each row of the table that is affected by the triggering statement. The absence of the FOR EACH ROW option indicates that the trigger fires only once for each applicable statement, but not separately for each row affected by the statement.\par
+\par
+For example, you define the following trigger:\par
+\par
+Note:\par
+You may need to set up the following data structures for certain examples to work:\par
+CREATE TABLE Emp_log (\par
+   Emp_id     NUMBER, \par
+   Log_date   DATE,\par
+   New_salary NUMBER, \par
+   Action     VARCHAR2(20));\par
+CREATE OR REPLACE TRIGGER Log_salary_increase\par
+AFTER UPDATE ON Emp_tab\par
+FOR EACH ROW\par
+WHEN (new.Sal > 1000)\par
+BEGIN\par
+    INSERT INTO Emp_log (Emp_id, Log_date, New_salary, Action)\par
+       VALUES (:new.Empno, SYSDATE, :new.SAL, 'NEW SAL');\par
+END;\par
+\par
+Then, you enter the following SQL statement:\par
+\par
+UPDATE Emp_tab SET Sal = Sal + 1000.0\par
+    WHERE Deptno = 20;\par
+\par
+If there are five employees in department 20, then the trigger fires five times when this statement is entered, because five rows are affected.\par
+\par
+The following trigger fires only once for each UPDATE of the Emp_tab table:\par
+\par
+CREATE OR REPLACE TRIGGER Log_emp_update\par
+AFTER UPDATE ON Emp_tab\par
+BEGIN\par
+    INSERT INTO Emp_log (Log_date, Action)\par
+        VALUES (SYSDATE, 'Emp_tab COMMISSIONS CHANGED');\par
+END;\par
+See Also:\par
+Oracle Database Concepts for the order of trigger firing\par
+The statement level triggers are useful for performing validation checks for the entire statement.\par
+\par
+Firing Triggers Based on Conditions (WHEN Clause)\par
+\par
+Optionally, a trigger restriction can be included in the definition of a row trigger by specifying a Boolean SQL expression in a WHEN clause.\par
+\par
+Note:\par
+A WHEN clause cannot be included in the definition of a statement trigger.\par
+If included, then the expression in the WHEN clause is evaluated for each row that the trigger affects.\par
+\par
+If the expression evaluates to TRUE for a row, then the trigger body is fired on behalf of that row. However, if the expression evaluates to FALSE or NOT TRUE for a row (unknown, as with nulls), then the trigger body is not fired for that row. The evaluation of the WHEN clause does not have an effect on the execution of the triggering SQL statement (in other words, the triggering statement is not rolled back if the expression in a WHEN clause evaluates to FALSE).\par
+\par
+For example, in the PRINT_SALARY_CHANGES trigger, the trigger body is not run if the new value of Empno is zero, NULL, or negative. In more realistic examples, you might test if one column value is less than another.\par
+\par
+The expression in a WHEN clause of a row trigger can include correlation names, which are explained later. The expression in a WHEN clause must be a SQL expression, and it cannot include a subquery. You cannot use a PL/SQL expression (including user-defined functions) in the WHEN clause.\par
+\par
+Note:\par
+You cannot specify the WHEN clause for INSTEAD OF triggers.\par
+Coding the Trigger Body\par
+\par
+The trigger body is a CALL procedure or a PL/SQL block that can include SQL and PL/SQL statements. The CALL procedure can be either a PL/SQL or a Java procedure that is encapsulated in a PL/SQL wrapper. These statements are run if the triggering statement is entered and if the trigger restriction (if included) evaluates to TRUE.\par
+\par
+The trigger body for row triggers has some special constructs that can be included in the code of the PL/SQL block: correlation names and the REFERENCEING option, and the conditional predicates INSERTING, DELETING, and UPDATING.\par
+\par
+Note:\par
+The INSERTING, DELETING, and UPDATING conditional predicates cannot be used for the CALL procedures; they can only be used in a PL/SQL block.\par
+Example: Monitoring Logons with a Trigger \par
+\par
+Note:\par
+You may need to set up data structures similar to the following for certain examples to work:\par
+CONNECT system/manager\par
+GRANT ADMINISTER DATABASE TRIGGER TO scott;\par
+CONNECT scott/tiger\par
+CREATE TABLE audit_table (\par
+   seq number,\par
+   user_at  VARCHAR2(10),\par
+   time_now DATE,\par
+   term     VARCHAR2(10),\par
+   job      VARCHAR2(10), \par
+   proc     VARCHAR2(10), \par
+   enum     NUMBER);\par
+CREATE OR REPLACE PROCEDURE foo (c VARCHAR2) AS \par
+   BEGIN \par
+      INSERT INTO Audit_table (user_at) VALUES(c);\par
+   END;\par
+\par
+CREATE OR REPLACE TRIGGER logontrig AFTER LOGON ON DATABASE \par
+-- Just call an existing procedure. The ORA_LOGIN_USER is a function\par
+-- that returns information about the event that fired the trigger.\par
+CALL foo (ora_login_user)\par
+/\par
+Example: Calling a Java Procedure from a Trigger \par
+\par
+Although triggers are declared using PL/SQL, they can call procedures in other languages, such as Java:\par
+\par
+CREATE OR REPLACE PROCEDURE Before_delete (Id IN NUMBER, Ename VARCHAR2)\par
+IS language Java\par
+name 'thjvTriggers.beforeDelete (oracle.sql.NUMBER, oracle.sql.CHAR)';\par
+\par
+CREATE OR REPLACE TRIGGER Pre_del_trigger BEFORE DELETE ON Tab \par
+FOR EACH ROW\par
+CALL Before_delete (:old.Id, :old.Ename)\par
+/\par
+\par
+The corresponding Java file is thjvTriggers.java:\par
+\par
+import java.sql.*\par
+import java.io.*\par
+import oracle.sql.*\par
+import oracle.oracore.*\par
+public class thjvTriggers\par
+\{\par
+public state void\par
+beforeDelete (NUMBER old_id, CHAR old_name)\par
+Throws SQLException, CoreException\par
+   \{\par
+   Connection conn = JDBCConnection.defaultConnection();\par
+   Statement stmt = conn.CreateStatement();\par
+   String sql = "insert into logtab values\par
+   ("+ old_id.intValue() +", '"+ old_ename.toString() + ", BEFORE DELETE');\par
+   stmt.executeUpdate (sql);\par
+   stmt.close();\par
+   return;\par
+   \}\par
+\}\par
+Accessing Column Values in Row Triggers\par
+\par
+Within a trigger body of a row trigger, the PL/SQL code and SQL statements have access to the old and new column values of the current row affected by the triggering statement. Two correlation names exist for every column of the table being modified: one for the old column value, and one for the new column value. Depending on the type of triggering statement, certain correlation names might not have any meaning.\par
+\par
+A trigger fired by an INSERT statement has meaningful access to new column values only. Because the row is being created by the INSERT, the old values are null.\par
+\par
+A trigger fired by an UPDATE statement has access to both old and new column values for both BEFORE and AFTER row triggers.\par
+\par
+A trigger fired by a DELETE statement has meaningful access to :old column values only. Because the row no longer exists after the row is deleted, the :new values are NULL. However, you cannot modify :new values because ORA-4084 is raised if you try to modify :new values.\par
+\par
+The new column values are referenced using the new qualifier before the column name, while the old column values are referenced using the old qualifier before the column name. For example, if the triggering statement is associated with the Emp_tab table (with the columns SAL, COMM, and so on), then you can include statements in the trigger body. For example:\par
+\par
+IF :new.Sal > 10000 ...\par
+IF :new.Sal < :old.Sal ...\par
+\par
+Old and new values are available in both BEFORE and AFTER row triggers. A new column value can be assigned in a BEFORE row trigger, but not in an AFTER row trigger (because the triggering statement takes effect before an AFTER row trigger is fired). If a BEFORE row trigger changes the value of new.column, then an AFTER row trigger fired by the same statement sees the change assigned by the BEFORE row trigger.\par
+\par
+Correlation names can also be used in the Boolean expression of a WHEN clause. A colon (:) must precede the old and new qualifiers when they are used in a trigger body, but a colon is not allowed when using the qualifiers in the WHEN clause or the REFERENCING option.\par
+\par
+Example: Modifying LOB Columns with a Trigger\par
+\par
+You can treat LOB columns the same as other columns, using regular SQL and PL/SQL functions with CLOB columns, and calls to the DBMS_LOB package with BLOB columns:\par
+\par
+drop table tab1;\par
+\par
+create table tab1 (c1 clob);\par
+insert into tab1 values ('<h1>HTML Document Fragment</h1><p>Some text.');\par
+\par
+create or replace trigger trg1\par
+  before update on tab1\par
+  for each row\par
+begin\par
+  dbms_output.put_line('Old value of CLOB column: '||:OLD.c1);\par
+  dbms_output.put_line('Proposed new value of CLOB column: '||:NEW.c1);\par
+\par
+-- Previously, we couldn't change the new value for a LOB.\par
+-- Now, we can replace it, or construct a new value using SUBSTR, INSTR...\par
+-- operations for a CLOB, or DBMS_LOB calls for a BLOB.\par
+  :NEW.c1 := :NEW.c1 || to_clob('<hr><p>Standard footer paragraph.');\par
+\par
+  dbms_output.put_line('Final value of CLOB column: '||:NEW.c1);\par
+end;\par
+/ \par
+\par
+set serveroutput on;\par
+update tab1 set c1 = '<h1>Different Document Fragment</h1><p>Different text.';\par
+\par
+select * from tab1;\par
+INSTEAD OF Triggers on Nested Table View Columns\par
+\par
+In the case of INSTEAD OF triggers on nested table view columns, the new and old qualifiers correspond to the new and old nested table elements. The parent row corresponding to this nested table element can be accessed using the parent qualifier. The parent correlation name is meaningful and valid only inside a nested table trigger.\par
+\par
+Avoiding Name Conflicts with Triggers (REFERENCING Option)\par
+\par
+The REFERENCING option can be specified in a trigger body of a row trigger to avoid name conflicts among the correlation names and tables that might be named old or new. Because this is rare, this option is infrequently used.\par
+\par
+For example, assume you have a table named new with columns field1 (number) and field2 (character). The following CREATE TRIGGER example shows a trigger associated with the new table that can use correlation names and avoid naming conflicts between the correlation names and the table name:\par
+\par
+Note:\par
+You may need to set up the following data structures for certain examples to work:\par
+CREATE TABLE new (\par
+   field1     NUMBER, \par
+   field2     VARCHAR2(20));\par
+CREATE OR REPLACE TRIGGER Print_salary_changes\par
+BEFORE UPDATE ON new\par
+REFERENCING new AS Newest\par
+FOR EACH ROW\par
+BEGIN\par
+   :Newest.Field2 := TO_CHAR (:newest.field1);\par
+END;\par
+\par
+Notice that the new qualifier is renamed to newest using the REFERENCING option, and it is then used in the trigger body.\par
+\par
+Detecting the DML Operation That Fired a Trigger\par
+\par
+If more than one type of DML operation can fire a trigger (for example, ON INSERT OR DELETE OR UPDATE OF Emp_tab), the trigger body can use the conditional predicates INSERTING, DELETING, and UPDATING to check which type of statement fire the trigger.\par
+\par
+Within the code of the trigger body, you can execute blocks of code depending on the kind of DML operation fired the trigger:\par
+\par
+IF INSERTING THEN ... END IF;\par
+IF UPDATING THEN ... END IF;\par
+\par
+The first condition evaluates to TRUE only if the statement that fired the trigger is an INSERT statement; the second condition evaluates to TRUE only if the statement that fired the trigger is an UPDATE statement.\par
+\par
+In an UPDATE trigger, a column name can be specified with an UPDATING conditional predicate to determine if the named column is being updated. For example, assume a trigger is defined as the following:\par
+\par
+CREATE OR REPLACE TRIGGER ...\par
+... UPDATE OF Sal, Comm ON Emp_tab ...\par
+BEGIN\par
+\par
+... IF UPDATING ('SAL') THEN ... END IF;\par
+\par
+END;\par
+\par
+The code in the THEN clause runs only if the triggering UPDATE statement updates the SAL column. This way, the trigger can minimize its overhead when the column of interest is not being changed.\par
+\par
+Error Conditions and Exceptions in the Trigger Body\par
+\par
+If a predefined or user-defined error condition or exception is raised during the execution of a trigger body, then all effects of the trigger body, as well as the triggering statement, are rolled back (unless the error is trapped by an exception handler). Therefore, a trigger body can prevent the execution of the triggering statement by raising an exception. User-defined exceptions are commonly used in triggers that enforce complex security authorizations or integrity constraints.\par
+\par
+The only exception to this is when the event under consideration is database STARTUP, SHUTDOWN, or LOGIN when the user logging in is SYSTEM. In these scenarios, only the trigger action is rolled back.\par
+\par
+Triggers on Object Tables\par
+\par
+You can use the OBJECT_VALUE pseudocolumn in a trigger on an object table since 10g Release 1 (10.1). OBJECT_VALUE means the object as a whole. This is one example of its use. You can also call a PL/SQL function with OBJECT_VALUE as the datatype of an IN formal parameter.\par
+\par
+Here is an example of the use of OBJECT_VALUE in a trigger. To keep track of updates to values in an object table tbl, a history table, tbl_history, is also created in the following example. For tbl, the values 1 through 5 are inserted into n, while m is kept at 0. The trigger is a row-level trigger that executes once for each row affected by a DML statement. The trigger causes the old and new values of the object t in tbl to be written in tbl_history when tbl is updated. These old and new values are :OLD.OBJECT_VALUE and :NEW.OBJECT_VALUE. An update of the table tbl is done (each value of n is increased by 1). A select from the history table to check that the trigger works is then shown at the end of the example:\par
+\par
+CREATE OR REPLACE TYPE t AS OBJECT (n NUMBER, m NUMBER)\par
+/\par
+CREATE TABLE tbl OF t\par
+/\par
+BEGIN\par
+  FOR j IN 1..5 LOOP\par
+    INSERT INTO tbl VALUES (t(j, 0));\par
+  END LOOP;\par
+END;\par
+/\par
+CREATE TABLE tbl_history ( d DATE, old_obj t, new_obj t)\par
+/\par
+CREATE OR REPLACE TRIGGER Tbl_Trg\par
+AFTER UPDATE ON tbl\par
+FOR EACH ROW\par
+BEGIN\par
+  INSERT INTO tbl_history (d, old_obj, new_obj)\par
+    VALUES (SYSDATE, :OLD.OBJECT_VALUE, :NEW.OBJECT_VALUE);\par
+END Tbl_Trg;\par
+/\par
+--------------------------------------------------------------------------------\par
+ \par
+UPDATE tbl SET tbl.n = tbl.n+1\par
+/\par
+BEGIN\par
+  FOR j IN (SELECT d, old_obj, new_obj FROM tbl_history) LOOP\par
+    Dbms_Output.Put_Line (\par
+      j.d||\par
+      ' -- old: '||j.old_obj.n||' '||j.old_obj.m||\par
+      ' -- new: '||j.new_obj.n||' '||j.new_obj.m);\par
+  END LOOP;\par
+END;\par
+/\par
+The result of the select shows that the values of the column n have been all increased by 1. The value of m remains 0. The output of the select is:\par
+\par
+23-MAY-05 -- old: 1 0 -- new: 2 0\par
+23-MAY-05 -- old: 2 0 -- new: 3 0\par
+23-MAY-05 -- old: 3 0 -- new: 4 0\par
+23-MAY-05 -- old: 4 0 -- new: 5 0\par
+23-MAY-05 -- old: 5 0 -- new: 6 0\par
+Triggers and Handling Remote Exceptions\par
+\par
+A trigger that accesses a remote site cannot do remote exception handling if the network link is unavailable. For example:\par
+\par
+CREATE OR REPLACE TRIGGER Example\par
+AFTER INSERT ON Emp_tab\par
+FOR EACH ROW\par
+BEGIN\par
+  INSERT INTO Emp_tab@Remote     -- <- compilation fails here\par
+  VALUES ('x');                  --    when dblink is inaccessible\par
+EXCEPTION\par
+  WHEN OTHERS THEN\par
+    INSERT INTO Emp_log\par
+    VALUES ('x');\par
+END;\par
+\par
+A trigger is compiled when it is created. Thus, if a remote site is unavailable when the trigger must compile, then Oracle Database cannot validate the statement accessing the remote database, and the compilation fails. The previous example exception statement cannot run, because the trigger does not complete compilation.\par
+\par
+Because stored procedures are stored in a compiled form, the work-around for the previous example is as follows:\par
+\par
+CREATE OR REPLACE TRIGGER Example\par
+AFTER INSERT ON Emp_tab\par
+FOR EACH ROW\par
+BEGIN\par
+   Insert_row_proc;\par
+END;\par
+\par
+CREATE OR REPLACE PROCEDURE Insert_row_proc AS\par
+BEGIN\par
+    INSERT INTO Emp_tab@Remote\par
+    VALUES ('x');\par
+EXCEPTION\par
+   WHEN OTHERS THEN\par
+       INSERT INTO Emp_log\par
+       VALUES ('x');\par
+END;\par
+\par
+The trigger in this example compiles successfully and calls the stored procedure, which already has a validated statement for accessing the remote database; thus, when the remote INSERT statement fails because the link is down, the exception is caught.\par
+\par
+Restrictions on Creating Triggers\par
+\par
+Coding triggers requires some restrictions that are not required for standard PL/SQL blocks. The following sections discuss these restrictions.\par
+\par
+Maximum Trigger Size\par
+\par
+The size of a trigger cannot be more than 32K.\par
+\par
+SQL Statements Allowed in Trigger Bodies\par
+\par
+The body of a trigger can contain DML SQL statements. It can also contain SELECT statements, but they must be SELECT... INTO... statements or the SELECT statement in the definition of a cursor.\par
+\par
+DDL statements are not allowed in the body of a trigger. Also, no transaction control statements are allowed in a trigger. ROLLBACK, COMMIT, and SAVEPOINT cannot be used.For system triggers, \{CREATE/ALTER/DROP\} TABLE statements and ALTER...COMPILE are allowed.\par
+\par
+Note:\par
+A procedure called by a trigger cannot run the previous transaction control statements, because the procedure runs within the context of the trigger body.\par
+Statements inside a trigger can reference remote schema objects. However, pay special attention when calling remote procedures from within a local trigger. If a timestamp or signature mismatch is found during execution of the trigger, then the remote procedure is not run, and the trigger is invalidated.\par
+\par
+Trigger Restrictions on LONG and LONG RAW Datatypes\par
+\par
+LONG and LONG RAW datatypes in triggers are subject to the following restrictions:\par
+\par
+A SQL statement within a trigger can insert data into a column of LONG or LONG RAW datatype.\par
+\par
+If data from a LONG or LONG RAW column can be converted to a constrained datatype (such as CHAR and VARCHAR2), then a LONG or LONG RAW column can be referenced in a SQL statement within a trigger. The maximum length for these datatypes is 32000 bytes.\par
+\par
+Variables cannot be declared using the LONG or LONG RAW datatypes.\par
+\par
+:NEW and :PARENT cannot be used with LONG or LONG RAW columns.\par
+\par
+Trigger Restrictions on Mutating Tables\par
+\par
+A mutating table is a table that is being modified by an UPDATE, DELETE, or INSERT statement, or a table that might be updated by the effects of a DELETE CASCADE constraint.\par
+\par
+The session that issued the triggering statement cannot query or modify a mutating table. This restriction prevents a trigger from seeing an inconsistent set of data.\par
+\par
+This restriction applies to all triggers that use the FOR EACH ROW clause. Views being modified in INSTEAD OF triggers are not considered mutating.\par
+\par
+When a trigger encounters a mutating table, a runtime error occurs, the effects of the trigger body and triggering statement are rolled back, and control is returned to the user or application.\par
+\par
+Consider the following trigger:\par
+\par
+CREATE OR REPLACE TRIGGER Emp_count\par
+AFTER DELETE ON Emp_tab\par
+FOR EACH ROW\par
+DECLARE\par
+    n INTEGER;\par
+BEGIN\par
+    SELECT COUNT(*) INTO n FROM Emp_tab;\par
+    DBMS_OUTPUT.PUT_LINE(' There are now ' || n ||\par
+        ' employees.');\par
+END;\par
+\par
+If the following SQL statement is entered:\par
+\par
+DELETE FROM Emp_tab WHERE Empno = 7499;\par
+\par
+An error is returned because the table is mutating when the row is deleted:\par
+\par
+ORA-04091: table SCOTT.Emp_tab is mutating, trigger/function may not see it\par
+\par
+If you delete the line "FOR EACH ROW" from the trigger, it becomes a statement trigger which is not subject to this restriction, and the trigger.\par
+\par
+If you need to update a mutating table, you could bypass these restrictions by using a temporary table, a PL/SQL table, or a package variable. For example, in place of a single AFTER row trigger that updates the original table, resulting in a mutating table error, you might use two triggers\emdash an AFTER row trigger that updates a temporary table, and an AFTER statement trigger that updates the original table with the values from the temporary table.\par
+\par
+Declarative integrity constraints are checked at various times with respect to row triggers.\par
+\par
+See Also:\par
+Oracle Database Concepts for information about the interaction of triggers and integrity constraints\par
+Because declarative referential integrity constraints are not supported between tables on different nodes of a distributed database, the mutating table restrictions do not apply to triggers that access remote nodes. These restrictions are also not enforced among tables in the same database that are connected by loop-back database links. A loop-back database link makes a local table appear remote by defining an Oracle Net path back to the database that contains the link.\par
+\par
+Restrictions on Mutating Tables Relaxed\par
+\par
+The mutating error, discussed earlier in this section, still prevents the trigger from reading or modifying the table that the parent statement is modifying. However, starting in Oracle Database Release 8.1, a delete against the parent table causes before/after statement triggers to be fired once. That way, you can create triggers (just not row triggers) to read and modify the parent and child tables.\par
+\par
+This allows most foreign key constraint actions to be implemented through their obvious after-row trigger, providing the constraint is not self-referential. Update cascade, update set null, update set default, delete set default, inserting a missing parent, and maintaining a count of children can all be implemented easily. For example, this is an implementation of update cascade:\par
+\par
+  create table p (p1 number constraint ppk primary key); \par
+  create table f (f1 number constraint ffk references p); \par
+  create trigger pt after update on p for each row begin \par
+    update f set f1 = :new.p1 where f1 = :old.p1; \par
+  end; \par
+  / \par
+ \par
+This implementation requires care for multirow updates. For example, if a table p has three rows with the values (1), (2), (3), and table f also has three rows with the values (1), (2), (3), then the following statement updates p correctly but causes problems when the trigger updates f:\par
+\par
+  update p set p1 = p1+1; \par
+ \par
+The statement first updates (1) to (2) in p, and the trigger updates (1) to (2) in f, leaving two rows of value (2) in f. Then the statement updates (2) to (3) in p, and the trigger updates both rows of value (2) to (3) in f. Finally, the statement updates (3) to (4) in p, and the trigger updates all three rows in f from (3) to (4). The relationship of the data in p and f is lost.\par
+\par
+To avoid this problem, you must forbid multirow updates to p that change the primary key and reuse existing primary key values. It could also be solved by tracking which foreign key values have already been updated, then modifying the trigger so that no row is updated twice.\par
+\par
+That is the only problem with this technique for foreign key updates. The trigger cannot miss rows that have been changed but not committed by another transaction, because the foreign key constraint guarantees that no matching foreign key rows are locked before the after-row trigger is called.\par
+\par
+System Trigger Restrictions\par
+\par
+Depending on the event, different event attribute functions are available. For example, certain DDL operations may not be allowed on DDL events. Check "Event Attribute Functions" before using an event attribute function, because its effects might be undefined rather than producing an error condition.\par
+\par
+Only committed triggers are fired. For example, if you create a trigger that should be fired after all CREATE events, then the trigger itself does not fire after the creation, because the correct information about this trigger was not committed at the time when the trigger on CREATE events was fired.\par
+\par
+For example, if you execute the following SQL statement:\par
+\par
+CREATE OR REPLACE TRIGGER my_trigger AFTER CREATE ON DATABASE \par
+BEGIN null; \par
+END; \par
+\par
+Then, trigger my_trigger is not fired after the creation of my_trigger. Oracle Database does not fire a trigger that is not committed.\par
+\par
+Foreign Function Callouts\par
+\par
+All restrictions on foreign function callouts also apply.\par
+\par
+Who Is the Trigger User?\par
+\par
+The following statement, inside a trigger, returns the owner of the trigger, not the name of user who is updating the table:\par
+\par
+SELECT Username FROM USER_USERS;\par
+Privileges Needed to Work with Triggers\par
+\par
+To create a trigger in your schema, you must have the CREATE TRIGGER system privilege, and either:\par
+\par
+Own the table specified in the triggering statement, or\par
+\par
+Have the ALTER privilege for the table in the triggering statement, or\par
+\par
+Have the ALTER ANY TABLE system privilege\par
+\par
+To create a trigger in another user's schema, or to reference a table in another schema from a trigger in your schema, you must have the CREATE ANY TRIGGER system privilege. With this privilege, the trigger can be created in any schema and can be associated with any user's table. In addition, the user creating the trigger must also have EXECUTE privilege on the referenced procedures, functions, or packages.\par
+\par
+To create a trigger on DATABASE, you must have the ADMINISTER DATABASE TRIGGER privilege. If this privilege is later revoked, then you can drop the trigger, but not alter it.\par
+\par
+The object privileges to the schema objects referenced in the trigger body must be granted to the trigger owner explicitly (not through a role). The statements in the trigger body operate under the privilege domain of the trigger owner, not the privilege domain of the user issuing the triggering statement. This is similar to the privilege model for stored procedures.\par
+\par
+Compiling Triggers\par
+\par
+Triggers are similar to PL/SQL anonymous blocks with the addition of the :new and :old capabilities, but their compilation is different. A PL/SQL anonymous block is compiled each time it is loaded into memory. Compilation involves three stages:\par
+\par
+Syntax checking: PL/SQL syntax is checked, and a parse tree is generated.\par
+\par
+Semantic checking: Type checking and further processing on the parse tree.\par
+\par
+Code generation: The pcode is generated.\par
+\par
+Triggers, in contrast, are fully compiled when the CREATE TRIGGER statement is entered, and the pcode is stored in the data dictionary. Hence, firing the trigger no longer requires the opening of a shared cursor to run the trigger action. Instead, the trigger is executed directly.\par
+\par
+If errors occur during the compilation of a trigger, then the trigger is still created. If a DML statement fires this trigger, then the DML statement fails. (Runtime that trigger errors always cause the DML statement to fail.) You can use the SHOW ERRORS statement in SQL*Plus or Enterprise Manager to see any compilation errors when you create a trigger, or you can SELECT the errors from the USER_ERRORS view.\par
+\par
+Dependencies for Triggers\par
+\par
+Compiled triggers have dependencies. They become invalid if a depended-on object, such as a stored procedure or function called from the trigger body, is modified. Triggers that are invalidated for dependency reasons are recompiled when next invoked.\par
+\par
+You can examine the ALL_DEPENDENCIES view to see the dependencies for a trigger. For example, the following statement shows the dependencies for the triggers in the SCOTT schema:\par
+\par
+SELECT NAME, REFERENCED_OWNER, REFERENCED_NAME, REFERENCED_TYPE\par
+    FROM ALL_DEPENDENCIES\par
+    WHERE OWNER = 'SCOTT' and TYPE = 'TRIGGER';\par
+\par
+Triggers may depend on other functions or packages. If the function or package specified in the trigger is dropped, then the trigger is marked invalid. An attempt is made to validate the trigger on occurrence of the event. If the trigger cannot be validated successfully, then it is marked VALID WITH ERRORS, and the event fails.\par
+\par
+Note:\par
+There is an exception for STARTUP events: STARTUP events succeed even if the trigger fails. There are also exceptions for SHUTDOWN events and for LOGON events if you login as SYSTEM.\par
+\par
+Because the DBMS_AQ package is used to enqueue a message, dependency between triggers and queues cannot be maintained.\par
+\par
+Recompiling Triggers\par
+\par
+Use the ALTER TRIGGER statement to recompile a trigger manually. For example, the following statement recompiles the PRINT_SALARY_CHANGES trigger:\par
+\par
+ALTER TRIGGER Print_salary_changes COMPILE;\par
+\par
+To recompile a trigger, you must own the trigger or have the ALTER ANY TRIGGER system privilege.\par
+\par
+Modifying Triggers\par
+\par
+Like a stored procedure, a trigger cannot be explicitly altered: It must be replaced with a new definition. (The ALTER TRIGGER statement is used only to recompile, enable, or disable a trigger.)\par
+\par
+When replacing a trigger, you must include the OR REPLACE option in the CREATE TRIGGER statement. The OR REPLACE option is provided to allow a new version of an existing trigger to replace the older version, without affecting any grants made for the original version of the trigger.\par
+\par
+Alternatively, the trigger can be dropped using the DROP TRIGGER statement, and you can rerun the CREATE TRIGGER statement.\par
+\par
+To drop a trigger, the trigger must be in your schema, or you must have the DROP ANY TRIGGER system privilege.\par
+\par
+Debugging Triggers\par
+\par
+You can debug a trigger using the same facilities available for stored procedures.\par
+\par
+See Also:\par
+"Debugging Stored Procedures"\par
+Enabling and Disabling Triggers\par
+\par
+A trigger can be in one of two distinct modes:\par
+\par
+Enabled. An enabled trigger executes its trigger body if a triggering statement is entered and the trigger restriction (if any) evaluates to TRUE.\par
+\par
+Disabled. A disabled trigger does not execute its trigger body, even if a triggering statement is entered and the trigger restriction (if any) evaluates to TRUE.\par
+\par
+Enabling Triggers\par
+\par
+By default, a trigger is automatically enabled when it is created; however, it can later be disabled. After you have completed the task that required the trigger to be disabled, re-enable the trigger, so that it fires when appropriate.\par
+\par
+Enable a disabled trigger using the ALTER TRIGGER statement with the ENABLE option. To enable the disabled trigger named REORDER of the INVENTORY table, enter the following statement:\par
+\par
+ALTER TRIGGER Reorder ENABLE;\par
+\par
+All triggers defined for a specific table can be enabled with one statement using the ALTER TABLE statement with the ENABLE clause with the ALL TRIGGERS option. For example, to enable all triggers defined for the INVENTORY table, enter the following statement:\par
+\par
+ALTER TABLE Inventory\par
+    ENABLE ALL TRIGGERS;\par
+Disabling Triggers\par
+\par
+You might temporarily disable a trigger if:\par
+\par
+An object it references is not available.\par
+\par
+You need to perform a large data load, and you want it to proceed quickly without firing triggers.\par
+\par
+You are reloading data.\par
+\par
+By default, triggers are enabled when first created. Disable a trigger using the ALTER TRIGGER statement with the DISABLE option.\par
+\par
+For example, to disable the trigger named REORDER of the INVENTORY table, enter the following statement:\par
+\par
+ALTER TRIGGER Reorder DISABLE;\par
+\par
+All triggers associated with a table can be disabled with one statement using the ALTER TABLE statement with the DISABLE clause and the ALL TRIGGERS option. For example, to disable all triggers defined for the INVENTORY table, enter the following statement:\par
+\par
+ALTER TABLE Inventory\par
+    DISABLE ALL TRIGGERS;\par
+Viewing Information About Triggers\par
+\par
+The following data dictionary views reveal information about triggers:\par
+\par
+USER_TRIGGERS\par
+\par
+ALL_TRIGGERS\par
+\par
+DBA_TRIGGERS\par
+\par
+The new column, BASE_OBJECT_TYPE, specifies whether the trigger is based on DATABASE, SCHEMA, table, or view. The old column, TABLE_NAME, is null if the base object is not table or view.\par
+\par
+The column ACTION_TYPE specifies whether the trigger is a call type trigger or a PL/SQL trigger.\par
+\par
+The column TRIGGER_TYPE includes two additional values: BEFORE EVENT and AFTER EVENT, applicable only to system events.\par
+\par
+The column TRIGGERING_EVENT includes all system and DML events.\par
+\par
+See Also:\par
+Oracle Database Reference for a complete description of these data dictionary views\par
+For example, assume the following statement was used to create the REORDER trigger:\par
+\par
+Caution:\par
+You may need to set up data structures for certain examples to work:\par
+CREATE OR REPLACE TRIGGER Reorder\par
+AFTER UPDATE OF Parts_on_hand ON Inventory\par
+FOR EACH ROW\par
+WHEN(new.Parts_on_hand < new.Reorder_point)\par
+DECLARE\par
+   x NUMBER;\par
+BEGIN\par
+   SELECT COUNT(*) INTO x\par
+      FROM Pending_orders\par
+      WHERE Part_no = :new.Part_no;\par
+   IF x = 0  THEN\par
+      INSERT INTO Pending_orders\par
+         VALUES (:new.Part_no, :new.Reorder_quantity,\par
+                 sysdate);\par
+   END IF;\par
+END;\par
+\par
+The following two queries return information about the REORDER trigger:\par
+\par
+SELECT Trigger_type, Triggering_event, Table_name\par
+   FROM USER_TRIGGERS\par
+   WHERE Trigger_name = 'REORDER';\par
+\par
+TYPE             TRIGGERING_STATEMENT       TABLE_NAME\par
+---------------- -------------------------- ------------\par
+AFTER EACH ROW   UPDATE                     INVENTORY\par
+\par
+SELECT Trigger_body\par
+   FROM USER_TRIGGERS\par
+   WHERE Trigger_name = 'REORDER';\par
+\par
+TRIGGER_BODY\par
+--------------------------------------------\par
+DECLARE\par
+   x NUMBER;\par
+BEGIN\par
+   SELECT COUNT(*) INTO x\par
+      FROM Pending_orders\par
+      WHERE Part_no = :new.Part_no;\par
+   IF x = 0\par
+      THEN INSERT INTO Pending_orders\par
+         VALUES (:new.Part_no, :new.Reorder_quantity,\par
+            sysdate);\par
+   END IF;\par
+END;\par
+Examples of Trigger Applications\par
+\par
+You can use triggers in a number of ways to customize information management in Oracle Database. For example, triggers are commonly used to:\par
+\par
+Provide sophisticated auditing\par
+\par
+Prevent invalid transactions\par
+\par
+Enforce referential integrity (either those actions not supported by declarative integrity constraints or across nodes in a distributed database)\par
+\par
+Enforce complex business rules\par
+\par
+Enforce complex security authorizations\par
+\par
+Provide transparent event logging\par
+\par
+Automatically generate derived column values\par
+\par
+Enable building complex views that are updatable\par
+\par
+Track system events\par
+\par
+This section provides an example of each of these trigger applications. These examples are not meant to be used exactly as written: They are provided to assist you in designing your own triggers.\par
+\par
+Auditing with Triggers: Example\par
+\par
+Triggers are commonly used to supplement the built-in auditing features of Oracle Database. Although triggers can be written to record information similar to that recorded by the AUDIT statement, triggers should be used only when more detailed audit information is required. For example, use triggers to provide value-based auditing for each row.\par
+\par
+Sometimes, the AUDIT statement is considered a security audit facility, while triggers can provide financial audit facility.\par
+\par
+When deciding whether to create a trigger to audit database activity, consider what Oracle Database's auditing features provide, compared to auditing defined by triggers, as shown in Table 9-1.\par
+\par
+Table 9-1 Comparison of Built-in Auditing and Trigger-Based Auditing\par
+\par
+Audit Feature\tab Description\par
+DML and DDL Auditing\par
+Standard auditing options permit auditing of DML and DDL statements regarding all types of schema objects and structures. Comparatively, triggers permit auditing of DML statements entered against tables, and DDL auditing at SCHEMA or DATABASE level.\par
+Centralized Audit Trail\par
+All database audit information is recorded centrally and automatically using the auditing features of Oracle Database.\par
+Declarative Method\par
+Auditing features enabled using the standard Oracle Database features are easier to declare and maintain, and less prone to errors, when compared to auditing functions defined by triggers.\par
+Auditing Options can be Audited\par
+Any changes to existing auditing options can also be audited to guard against malicious database activity.\par
+Session and Execution time Auditing\par
+Using the database auditing features, records can be generated once every time an audited statement is entered (BY ACCESS) or once for every session that enters an audited statement (BY SESSION). Triggers cannot audit by session; an audit record is generated each time a trigger-audited table is referenced.\par
+Auditing of Unsuccessful Data Access\par
+Database auditing can be set to audit when unsuccessful data access occurs. However, unless autonomous transactions are used, any audit information generated by a trigger is rolled back if the triggering statement is rolled back. For more information on autonomous transactions, refer to Oracle Database Concepts.\par
+Sessions can be Audited\par
+Connections and disconnections, as well as session activity (physical I/Os, logical I/Os, deadlocks, and so on), can be recorded using standard database auditing.\par
+\par
+When using triggers to provide sophisticated auditing, AFTER triggers are normally used. By using AFTER triggers, auditing information is recorded after the triggering statement is subjected to any applicable integrity constraints, preventing cases where the audit processing is carried out unnecessarily for statements that generate exceptions to integrity constraints.\par
+\par
+Choosing between AFTER row and AFTER statement triggers depends on the information being audited. For example, row triggers provide value-based auditing for each table row. Triggers can also require the user to supply a "reason code" for issuing the audited SQL statement, which can be useful in both row and statement-level auditing situations.\par
+\par
+The following example demonstrates a trigger that audits modifications to the Emp_tab table for each row. It requires that a "reason code" be stored in a global package variable before the update. This shows how triggers can be used to provide value-based auditing and how to use public package variables.\par
+\par
+Note:\par
+You may need to set up the following data structures for the examples to work:\par
+CREATE OR REPLACE PACKAGE Auditpackage AS\par
+   Reason VARCHAR2(10);\par
+PROCEDURE Set_reason(Reason VARCHAR2);\par
+END;\par
+CREATE TABLE Emp99 (\par
+   Empno               NOT NULL   NUMBER(4),\par
+   Ename               VARCHAR2(10),\par
+   Job                 VARCHAR2(9),\par
+   Mgr                 NUMBER(4),\par
+   Hiredate            DATE,\par
+   Sal                 NUMBER(7,2),\par
+   Comm                NUMBER(7,2),\par
+   Deptno              NUMBER(2),\par
+   Bonus               NUMBER,\par
+   Ssn                 NUMBER,\par
+   Job_classification  NUMBER);\par
+\par
+CREATE TABLE Audit_employee (\par
+   Oldssn              NUMBER,\par
+   Oldname             VARCHAR2(10),\par
+   Oldjob              VARCHAR2(2),\par
+   Oldsal              NUMBER,\par
+   Newssn              NUMBER,\par
+   Newname             VARCHAR2(10),\par
+   Newjob              VARCHAR2(2),\par
+   Newsal              NUMBER,\par
+   Reason              VARCHAR2(10),\par
+   User1               VARCHAR2(10),\par
+   Systemdate          DATE);\par
+CREATE OR REPLACE TRIGGER Audit_employee\par
+AFTER INSERT OR DELETE OR UPDATE ON Emp99\par
+FOR EACH ROW\par
+BEGIN\par
+/* AUDITPACKAGE is a package with a public package\par
+   variable REASON.  REASON could be set by the\par
+   application by a command such as EXECUTE\par
+   AUDITPACKAGE.SET_REASON(reason_string). Note that a\par
+   package variable has state for the duration of a\par
+   session and that each session has a separate copy of\par
+   all package variables. */\par
+\par
+IF Auditpackage.Reason IS NULL THEN\par
+   Raise_application_error(-20201, 'Must specify reason'\par
+      || ' with AUDITPACKAGE.SET_REASON(Reason_string)');\par
+END IF;\par
+\par
+/* If the preceding conditional evaluates to TRUE, the\par
+   user-specified error number and message is raised,\par
+   the trigger stops execution, and the effects of the\par
+   triggering statement are rolled back.  Otherwise, a\par
+   new row is inserted into the predefined auditing\par
+   table named AUDIT_EMPLOYEE containing the existing\par
+   and new values of the Emp_tab table and the reason code\par
+   defined by the REASON variable of AUDITPACKAGE.  Note\par
+   that the "old" values are NULL if triggering\par
+   statement is an INSERT and the "new" values are NULL\par
+   if the triggering statement is a DELETE. */\par
+\par
+INSERT INTO Audit_employee VALUES\par
+   (:old.Ssn, :old.Ename, :old.Job_classification, :old.Sal,\par
+   :new.Ssn, :new.Ename, :new.Job_classification, :new.Sal,\par
+   auditpackage.Reason, User, Sysdate );\par
+END;\par
+\par
+Optionally, you can also set the reason code back to NULL if you wanted to force the reason code to be set for every update. The following simple AFTER statement trigger sets the reason code back to NULL after the triggering statement is run:\par
+\par
+CREATE OR REPLACE TRIGGER Audit_employee_reset\par
+AFTER INSERT OR DELETE OR UPDATE ON Emp_tab\par
+BEGIN\par
+   auditpackage.set_reason(NULL);\par
+END;\par
+\par
+Notice that the previous two triggers are both fired by the same type of SQL statement. However, the AFTER row trigger is fired once for each row of the table affected by the triggering statement, while the AFTER statement trigger is fired only once after the triggering statement execution is completed.\par
+\par
+This next trigger also uses triggers to do auditing. It tracks changes made to the Emp_tab table and stores this information in AUDIT_TABLE and AUDIT_TABLE_VALUES.\par
+\par
+Note:\par
+You may need to set up the following data structures for the example to work:\par
+CREATE TABLE Audit_table (\par
+   Seq      NUMBER,\par
+   User_at  VARCHAR2(10),\par
+   Time_now DATE, \par
+   Term     VARCHAR2(10),\par
+   Job      VARCHAR2(10), \par
+   Proc     VARCHAR2(10), \par
+   enum     NUMBER);\par
+CREATE SEQUENCE Audit_seq;\par
+CREATE TABLE Audit_table_values (\par
+   Seq      NUMBER, \par
+   Dept     NUMBER, \par
+   Dept1    NUMBER, \par
+   Dept2    NUMBER);\par
+CREATE OR REPLACE TRIGGER Audit_emp\par
+   AFTER INSERT OR UPDATE OR DELETE ON Emp_tab\par
+   FOR EACH ROW\par
+   DECLARE\par
+      Time_now DATE;\par
+      Terminal CHAR(10);\par
+   BEGIN\par
+      -- get current time, and the terminal of the user:\par
+      Time_now := SYSDATE;\par
+      Terminal := USERENV('TERMINAL');\par
+      -- record new employee primary key\par
+      IF INSERTING THEN \par
+         INSERT INTO Audit_table\par
+            VALUES (Audit_seq.NEXTVAL, User, Time_now,\par
+               Terminal, 'Emp_tab', 'INSERT', :new.Empno);\par
+      -- record primary key of the deleted row:\par
+      ELSIF DELETING THEN                           \par
+         INSERT INTO Audit_table\par
+            VALUES (Audit_seq.NEXTVAL, User, Time_now,\par
+               Terminal, 'Emp_tab', 'DELETE', :old.Empno);\par
+      -- for updates, record the primary key\par
+      -- of the row being updated:\par
+      ELSE \par
+         INSERT INTO Audit_table\par
+            VALUES (audit_seq.NEXTVAL, User, Time_now,\par
+               Terminal, 'Emp_tab', 'UPDATE', :old.Empno);\par
+         -- and for SAL and DEPTNO, record old and new values:\par
+         IF UPDATING ('SAL') THEN\par
+            INSERT INTO Audit_table_values\par
+               VALUES (Audit_seq.CURRVAL, 'SAL',\par
+                  :old.Sal, :new.Sal);\par
+\par
+         ELSIF UPDATING ('DEPTNO') THEN\par
+            INSERT INTO Audit_table_values\par
+               VALUES (Audit_seq.CURRVAL, 'DEPTNO',\par
+                  :old.Deptno, :new.DEPTNO);\par
+         END IF;\par
+      END IF;\par
+END;\par
+Integrity Constraints and Triggers: Examples\par
+\par
+Triggers and declarative integrity constraints can both be used to constrain data input. However, triggers and integrity constraints have significant differences.\par
+\par
+Declarative integrity constraints are statements about the database that are always true. A constraint applies to existing data in the table and any statement that manipulates the table.\par
+\par
+See Also:\par
+Chapter 6, "Maintaining Data Integrity in Application Development"\par
+Triggers constrain what a transaction can do. A trigger does not apply to data loaded before the definition of the trigger; therefore, it is not known if all data in a table conforms to the rules established by an associated trigger.\par
+\par
+Although triggers can be written to enforce many of the same rules supported by Oracle Database's declarative integrity constraint features, triggers should only be used to enforce complex business rules that cannot be defined using standard integrity constraints. The declarative integrity constraint features provided with Oracle Database offer the following advantages when compared to constraints defined by triggers:\par
+\par
+Centralized integrity checks. All points of data access must adhere to the global set of rules defined by the integrity constraints corresponding to each schema object.\par
+\par
+Declarative method. Constraints defined using the standard integrity constraint features are much easier to write and are less prone to errors, when compared with comparable constraints defined by triggers.\par
+\par
+While most aspects of data integrity can be defined and enforced using declarative integrity constraints, triggers can be used to enforce complex business constraints not definable using declarative integrity constraints. For example, triggers can be used to enforce:\par
+\par
+UPDATE SET NULL, and UPDATE and DELETE SET DEFAULT referential actions.\par
+\par
+Referential integrity when the parent and child tables are on different nodes of a distributed database.\par
+\par
+Complex check constraints not definable using the expressions allowed in a CHECK constraint.\par
+\par
+Referential Integrity Using Triggers\par
+\par
+There are many cases where referential integrity can be enforced using triggers. Note, however, you should only use triggers when there is no declarative support for the action you are performing.\par
+\par
+When using triggers to maintain referential integrity, declare the PRIMARY (or UNIQUE) KEY constraint in the parent table. If referential integrity is being maintained between a parent and child table in the same database, then you can also declare the foreign key in the child table, but disable it; this prevents the corresponding PRIMARY KEY constraint from being dropped (unless the PRIMARY KEY constraint is explicitly dropped with the CASCADE option).\par
+\par
+To maintain referential integrity using triggers:\par
+\par
+A trigger must be defined for the child table that guarantees values inserted or updated in the foreign key correspond to values in the parent key.\par
+\par
+One or more triggers must be defined for the parent table. These triggers guarantee the desired referential action (RESTRICT, CASCADE, or SET NULL) for values in the foreign key when values are updated or deleted in the parent key. No action is required for inserts into the parent table (no dependent foreign keys exist).\par
+\par
+The following sections provide examples of the triggers necessary to enforce referential integrity. The Emp_tab and Dept_tab table relationship is used in these examples.\par
+\par
+Several of the triggers include statements that lock rows (SELECT... FOR UPDATE). This operation is necessary to maintain concurrency as the rows are being processed.\par
+\par
+Foreign Key Trigger for Child Table  The following trigger guarantees that before an INSERT or UPDATE statement affects a foreign key value, the corresponding value exists in the parent key. The mutating table exception included in the following example allows this trigger to be used with the UPDATE_SET_DEFAULT and UPDATE_CASCADE triggers. This exception can be removed if this trigger is used alone.\par
+\par
+CREATE OR REPLACE TRIGGER Emp_dept_check\par
+BEFORE INSERT OR UPDATE OF Deptno ON Emp_tab\par
+FOR EACH ROW WHEN (new.Deptno IS NOT NULL)\par
+\par
+-- Before a row is inserted, or DEPTNO is updated in the Emp_tab\par
+-- table, fire this trigger to verify that the new foreign\par
+-- key value (DEPTNO) is present in the Dept_tab table.\par
+DECLARE\par
+   Dummy              INTEGER;  -- to be used for cursor fetch\par
+   Invalid_department EXCEPTION;\par
+   Valid_department   EXCEPTION;\par
+   Mutating_table     EXCEPTION;\par
+   PRAGMA EXCEPTION_INIT (Mutating_table, -4091);\par
+\par
+-- Cursor used to verify parent key value exists.  If\par
+-- present, lock parent key's row so it can't be\par
+-- deleted by another transaction until this\par
+-- transaction is committed or rolled back.\par
+  CURSOR Dummy_cursor (Dn NUMBER) IS\par
+   SELECT Deptno FROM Dept_tab\par
+      WHERE Deptno = Dn\par
+         FOR UPDATE OF Deptno;\par
+BEGIN\par
+   OPEN Dummy_cursor (:new.Deptno);\par
+   FETCH Dummy_cursor INTO Dummy;\par
+\par
+   -- Verify parent key.  If not found, raise user-specified\par
+   -- error number and message.  If found, close cursor\par
+   -- before allowing triggering statement to complete:\par
+   IF Dummy_cursor%NOTFOUND THEN\par
+      RAISE Invalid_department;\par
+   ELSE\par
+      RAISE valid_department;\par
+   END IF;\par
+   CLOSE Dummy_cursor;\par
+EXCEPTION\par
+   WHEN Invalid_department THEN\par
+      CLOSE Dummy_cursor;\par
+      Raise_application_error(-20000, 'Invalid Department'\par
+         || ' Number' || TO_CHAR(:new.deptno));\par
+   WHEN Valid_department THEN\par
+      CLOSE Dummy_cursor;\par
+   WHEN Mutating_table THEN\par
+      NULL;\par
+END;\par
+UPDATE and DELETE RESTRICT Trigger for Parent Table  The following trigger is defined on the DEPT_TAB table to enforce the UPDATE and DELETE RESTRICT referential action on the primary key of the DEPT_TAB table:\par
+\par
+CREATE OR REPLACE TRIGGER Dept_restrict\par
+BEFORE DELETE OR UPDATE OF Deptno ON Dept_tab\par
+FOR EACH ROW\par
+\par
+-- Before a row is deleted from Dept_tab or the primary key\par
+-- (DEPTNO) of Dept_tab is updated, check for dependent\par
+-- foreign key values in Emp_tab; rollback if any are found.\par
+DECLARE\par
+   Dummy                 INTEGER;      -- to be used for cursor fetch\par
+   Employees_present     EXCEPTION;\par
+   employees_not_present EXCEPTION;\par
+\par
+   -- Cursor used to check for dependent foreign key values.\par
+   CURSOR Dummy_cursor (Dn NUMBER) IS\par
+      SELECT Deptno FROM Emp_tab WHERE Deptno = Dn;\par
+\par
+BEGIN\par
+   OPEN Dummy_cursor (:old.Deptno);\par
+   FETCH Dummy_cursor INTO Dummy;\par
+   -- If dependent foreign key is found, raise user-specified\par
+   -- error number and message.  If not found, close cursor\par
+   -- before allowing triggering statement to complete.\par
+   IF Dummy_cursor%FOUND THEN\par
+      RAISE Employees_present;     -- dependent rows exist \par
+   ELSE\par
+      RAISE Employees_not_present; -- no dependent rows \par
+   END IF;\par
+   CLOSE Dummy_cursor;\par
+\par
+EXCEPTION\par
+   WHEN Employees_present THEN\par
+      CLOSE Dummy_cursor;\par
+      Raise_application_error(-20001, 'Employees Present in'\par
+         || ' Department ' || TO_CHAR(:old.DEPTNO));\par
+   WHEN Employees_not_present THEN\par
+      CLOSE Dummy_cursor;\par
+END;\par
+Caution:\par
+This trigger does not work with self-referential tables (tables with both the primary/unique key and the foreign key). Also, this trigger does not allow triggers to cycle (such as, A fires B fires A).\par
+UPDATE and DELETE SET NULL Triggers for Parent Table: Example  The following trigger is defined on the DEPT_TAB table to enforce the UPDATE and DELETE SET NULL referential action on the primary key of the DEPT_TAB table:\par
+\par
+CREATE OR REPLACE TRIGGER Dept_set_null\par
+AFTER DELETE OR UPDATE OF Deptno ON Dept_tab\par
+FOR EACH ROW\par
+\par
+-- Before a row is deleted from Dept_tab or the primary key\par
+-- (DEPTNO) of Dept_tab is updated, set all corresponding\par
+-- dependent foreign key values in Emp_tab to NULL:\par
+BEGIN\par
+   IF UPDATING AND :OLD.Deptno != :NEW.Deptno OR DELETING THEN\par
+      UPDATE Emp_tab SET Emp_tab.Deptno = NULL\par
+         WHERE Emp_tab.Deptno = :old.Deptno;\par
+   END IF;\par
+END;\par
+DELETE Cascade Trigger for Parent Table: Example  The following trigger on the DEPT_TAB table enforces the DELETE CASCADE referential action on the primary key of the DEPT_TAB table:\par
+\par
+CREATE OR REPLACE TRIGGER Dept_del_cascade\par
+AFTER DELETE ON Dept_tab\par
+FOR EACH ROW\par
+\par
+-- Before a row is deleted from Dept_tab, delete all\par
+-- rows from the Emp_tab table whose DEPTNO is the same as\par
+-- the DEPTNO being deleted from the Dept_tab table:\par
+BEGIN\par
+   DELETE FROM Emp_tab\par
+      WHERE Emp_tab.Deptno = :old.Deptno;\par
+END;\par
+Note:\par
+Typically, the code for DELETE CASCADE is combined with the code for UPDATE SET NULL or UPDATE SET DEFAULT to account for both updates and deletes.\par
+UPDATE Cascade Trigger for Parent Table: Example  The following trigger ensures that if a department number is updated in the Dept_tab table, then this change is propagated to dependent foreign keys in the Emp_tab table:\par
+\par
+-- Generate a sequence number to be used as a flag for\par
+-- determining if an update has occurred on a column:\par
+CREATE SEQUENCE Update_sequence\par
+    INCREMENT BY 1 MAXVALUE 5000\par
+    CYCLE;\par
+\par
+CREATE OR REPLACE PACKAGE Integritypackage AS\par
+   Updateseq NUMBER;\par
+END Integritypackage;\par
+\par
+CREATE OR REPLACE PACKAGE BODY Integritypackage AS\par
+END Integritypackage;\par
+-- create flag col:\par
+ALTER TABLE Emp_tab ADD Update_id NUMBER;\par
+\par
+CREATE OR REPLACE TRIGGER Dept_cascade1 BEFORE UPDATE OF Deptno ON Dept_tab\par
+DECLARE\par
+   Dummy NUMBER;\par
+\par
+-- Before updating the Dept_tab table (this is a statement\par
+-- trigger), generate a new sequence number and assign\par
+-- it to the public variable UPDATESEQ of a user-defined\par
+-- package named INTEGRITYPACKAGE:\par
+BEGIN\par
+   SELECT Update_sequence.NEXTVAL\par
+      INTO Dummy\par
+      FROM dual;\par
+   Integritypackage.Updateseq := Dummy;\par
+END;\par
+\par
+CREATE OR REPLACE TRIGGER Dept_cascade2 AFTER DELETE OR UPDATE\par
+   OF Deptno ON Dept_tab FOR EACH ROW\par
+\par
+-- For each department number in Dept_tab that is updated,\par
+-- cascade the update to dependent foreign keys in the\par
+-- Emp_tab table.  Only cascade the update if the child row\par
+-- has not already been updated by this trigger:\par
+BEGIN\par
+   IF UPDATING THEN\par
+      UPDATE Emp_tab\par
+         SET Deptno = :new.Deptno,\par
+         Update_id = Integritypackage.Updateseq   --from 1st\par
+         WHERE Emp_tab.Deptno = :old.Deptno\par
+         AND Update_id IS NULL;\par
+         /* only NULL if not updated by the 3rd trigger\par
+            fired by this same triggering statement */\par
+   END IF;\par
+   IF DELETING THEN\par
+\par
+   -- Before a row is deleted from Dept_tab, delete all\par
+   -- rows from the Emp_tab table whose DEPTNO is the same as\par
+   -- the DEPTNO being deleted from the Dept_tab table:\par
+      DELETE FROM Emp_tab\par
+      WHERE Emp_tab.Deptno = :old.Deptno;\par
+   END IF;\par
+END;\par
+CREATE OR REPLACE TRIGGER Dept_cascade3 AFTER UPDATE OF Deptno ON Dept_tab\par
+BEGIN  UPDATE Emp_tab\par
+   SET Update_id = NULL\par
+   WHERE Update_id = Integritypackage.Updateseq;\par
+END;\par
+Note:\par
+Because this trigger updates the Emp_tab table, the Emp_dept_check trigger, if enabled, is also fired. The resulting mutating table error is trapped by the Emp_dept_check trigger. You should carefully test any triggers that require error trapping to succeed to ensure that they always work properly in your environment.\par
+Trigger for Complex Check Constraints: Example\par
+\par
+Triggers can enforce integrity rules other than referential integrity. For example, this trigger performs a complex check before allowing the triggering statement to run.\par
+\par
+Note:\par
+You may need to set up the following data structures for the example to work:\par
+CREATE TABLE Salgrade (\par
+   Grade                 NUMBER,\par
+   Losal                 NUMBER,\par
+   Hisal                 NUMBER,\par
+   Job_classification    NUMBER)\par
+CREATE OR REPLACE TRIGGER Salary_check\par
+BEFORE INSERT OR UPDATE OF Sal, Job ON Emp99\par
+FOR EACH ROW\par
+DECLARE\par
+   Minsal                NUMBER;\par
+   Maxsal                NUMBER;\par
+   Salary_out_of_range   EXCEPTION;\par
+BEGIN\par
+\par
+/* Retrieve the minimum and maximum salary for the\par
+   employee's new job classification from the SALGRADE\par
+   table into MINSAL and MAXSAL: */\par
+\par
+SELECT Minsal, Maxsal INTO Minsal, Maxsal FROM Salgrade\par
+   WHERE Job_classification = :new.Job;\par
+\par
+\par
+/* If the employee's new salary is less than or greater\par
+   than the job classification's limits, the exception is\par
+   raised.  The exception message is returned and the\par
+   pending INSERT or UPDATE statement that fired the\par
+   trigger is rolled back:*/\par
+\par
+   IF (:new.Sal < Minsal OR :new.Sal > Maxsal) THEN\par
+      RAISE Salary_out_of_range;\par
+   END IF;\par
+EXCEPTION\par
+   WHEN Salary_out_of_range THEN\par
+      Raise_application_error (-20300,\par
+         'Salary '||TO_CHAR(:new.Sal)||' out of range for '\par
+         ||'job classification '||:new.Job\par
+         ||' for employee '||:new.Ename);\par
+   WHEN NO_DATA_FOUND THEN\par
+      Raise_application_error(-20322,\par
+         'Invalid Job Classification '\par
+         ||:new.Job_classification);\par
+END;\par
+Complex Security Authorizations and Triggers: Example\par
+\par
+Triggers are commonly used to enforce complex security authorizations for table data. Only use triggers to enforce complex security authorizations that cannot be defined using the database security features provided with Oracle Database. For example, a trigger can prohibit updates to salary data of the Emp_tab table during weekends, holidays, and non-working hours.\par
+\par
+When using a trigger to enforce a complex security authorization, it is best to use a BEFORE statement trigger. Using a BEFORE statement trigger has these benefits:\par
+\par
+The security check is done before the triggering statement is allowed to run, so that no wasted work is done by an unauthorized statement.\par
+\par
+The security check is performed only once for the triggering statement, not for each row affected by the triggering statement.\par
+\par
+This example shows a trigger used to enforce security.\par
+\par
+Note:\par
+You may need to set up the following data structures for the example to work:\par
+CREATE TABLE Company_holidays (Day DATE);\par
+CREATE OR REPLACE TRIGGER Emp_permit_changes\par
+BEFORE INSERT OR DELETE OR UPDATE ON Emp99\par
+DECLARE\par
+   Dummy             INTEGER;\par
+   Not_on_weekends   EXCEPTION;\par
+   Not_on_holidays   EXCEPTION;\par
+   Non_working_hours EXCEPTION;\par
+BEGIN\par
+   /* check for weekends: */\par
+   IF (TO_CHAR(Sysdate, 'DY') = 'SAT' OR\par
+      TO_CHAR(Sysdate, 'DY') = 'SUN') THEN\par
+      RAISE Not_on_weekends;\par
+   END IF;\par
+   /* check for company holidays:*/\par
+   SELECT COUNT(*) INTO Dummy FROM Company_holidays\par
+      WHERE TRUNC(Day) = TRUNC(Sysdate);\par
+      /* TRUNC gets rid of time parts of dates: */\par
+   IF dummy > 0 THEN\par
+      RAISE Not_on_holidays;\par
+   END IF;\par
+   /* Check for work hours (8am to 6pm): */\par
+   IF (TO_CHAR(Sysdate, 'HH24') < 8 OR\par
+       TO_CHAR(Sysdate, 'HH24') > 18) THEN\par
+       RAISE Non_working_hours;\par
+   END IF;\par
+EXCEPTION\par
+   WHEN Not_on_weekends THEN\par
+      Raise_application_error(-20324,'May not change '\par
+         ||'employee table during the weekend');\par
+   WHEN Not_on_holidays THEN\par
+      Raise_application_error(-20325,'May not change '\par
+         ||'employee table during a holiday');\par
+   WHEN Non_working_hours THEN\par
+      Raise_application_error(-20326,'May not change '\par
+      ||'Emp_tab table during non-working hours');\par
+END;\par
+\par
+See Also:\par
+Oracle Database Security Guide for details on database security features\par
+Transparent Event Logging and Triggers\par
+\par
+Triggers are very useful when you want to transparently perform a related change in the database following certain events.\par
+\par
+The REORDER trigger example shows a trigger that reorders parts as necessary when certain conditions are met. (In other words, a triggering statement is entered, and the PARTS_ON_HAND value is less than the REORDER_POINT value.)\par
+\par
+Derived Column Values and Triggers: Example\par
+\par
+Triggers can derive column values automatically, based upon a value provided by an INSERT or UPDATE statement. This type of trigger is useful to force values in specific columns that depend on the values of other columns in the same row. BEFORE row triggers are necessary to complete this type of operation for the following reasons:\par
+\par
+The dependent values must be derived before the INSERT or UPDATE occurs, so that the triggering statement can use the derived values.\par
+\par
+The trigger must fire for each row affected by the triggering INSERT or UPDATE statement.\par
+\par
+The following example illustrates how a trigger can be used to derive new column values for a table whenever a row is inserted or updated.\par
+\par
+Note:\par
+You may need to set up the following data structures for the example to work:\par
+ALTER TABLE Emp99 ADD(\par
+   Uppername   VARCHAR2(20),\par
+   Soundexname VARCHAR2(20));\par
+CREATE OR REPLACE TRIGGER Derived \par
+BEFORE INSERT OR UPDATE OF Ename ON Emp99\par
+\par
+/* Before updating the ENAME field, derive the values for\par
+   the UPPERNAME and SOUNDEXNAME fields. Users should be\par
+   restricted from updating these fields directly: */\par
+FOR EACH ROW\par
+BEGIN\par
+   :new.Uppername := UPPER(:new.Ename);\par
+   :new.Soundexname := SOUNDEX(:new.Ename);\par
+END;\par
+Building Complex Updatable Views Using Triggers: Example\par
+\par
+Views are an excellent mechanism to provide logical windows over table data. However, when the view query gets complex, the system implicitly cannot translate the DML on the view into those on the underlying tables. INSTEAD OF triggers help solve this problem. These triggers can be defined over views, and they fire instead of the actual DML.\par
+\par
+Consider a library system where books are arranged under their respective titles. The library consists of a collection of book type objects. The following example explains the schema.\par
+\par
+CREATE OR REPLACE TYPE Book_t AS OBJECT\par
+(\par
+   Booknum   NUMBER,\par
+   Title     VARCHAR2(20),\par
+   Author    VARCHAR2(20),\par
+   Available CHAR(1)\par
+);\par
+CREATE OR REPLACE TYPE Book_list_t AS TABLE OF Book_t;\par
+\par
+Assume that the following tables exist in the relational schema:\par
+\par
+Table Book_table (Booknum, Section, Title, Author, Available)\par
+Booknum\tab Section\tab Title\tab Author\tab Available\par
+121001\tab Classic\tab Iliad\tab Homer\tab Y\par
+121002\tab Novel\tab Gone With the Wind\tab Mitchell M\tab N\par
+Library consists of library_table(section).\par
+\par
+Section\par
+Geography\par
+Classic\par
+You can define a complex view over these tables to create a logical view of the library with sections and a collection of books in each section.\par
+\par
+CREATE OR REPLACE VIEW Library_view AS\par
+SELECT i.Section, CAST (MULTISET (\par
+   SELECT b.Booknum, b.Title, b.Author, b.Available\par
+   FROM Book_table b\par
+   WHERE b.Section = i.Section) AS Book_list_t) BOOKLIST\par
+FROM Library_table i;\par
+\par
+Make this view updatable by defining an INSTEAD OF trigger over the view.\par
+\par
+CREATE OR REPLACE TRIGGER Library_trigger INSTEAD OF INSERT ON Library_view FOR EACH ROW\par
+   Bookvar BOOK_T;\par
+   i       INTEGER;\par
+BEGIN\par
+   INSERT INTO Library_table VALUES (:NEW.Section);\par
+   FOR i IN 1..:NEW.Booklist.COUNT LOOP\par
+      Bookvar := Booklist(i);\par
+      INSERT INTO book_table\par
+         VALUES ( Bookvar.booknum, :NEW.Section, Bookvar.Title, Bookvar.Author, bookvar.Available);\par
+   END LOOP;\par
+END;\par
+/\par
+\par
+The library_view is an updatable view, and any INSERTs on the view are handled by the trigger that gets fired automatically. For example:\par
+\par
+INSERT INTO Library_view VALUES ('History', book_list_t(book_t(121330, 'Alexander', 'Mirth', 'Y');\par
+\par
+Similarly, you can also define triggers on the nested table booklist to handle modification of the nested table element.\par
+\par
+Tracking System Events Using Triggers\par
+\par
+Fine-Grained Access Control Using Triggers: Example System triggers can be used to set application context. Application context is a relatively new feature that enhances your ability to implement fine-grained access control. Application context is a secure session cache, and it can be used to store session-specific attributes.\par
+\par
+In the example that follows, procedure set_ctx sets the application context based on the user profile. The trigger setexpensectx ensures that the context is set for every user.\par
+\par
+CONNECT secdemo/secdemo\par
+\par
+CREATE OR REPLACE CONTEXT Expenses_reporting USING Secdemo.Exprep_ctx;\par
+\par
+REM =================================================================\par
+REM Creation of the package which implements the context:\par
+REM =================================================================\par
+\par
+CREATE OR REPLACE PACKAGE Exprep_ctx AS\par
+ PROCEDURE Set_ctx;\par
+END;\par
+\par
+SHOW ERRORS\par
+\par
+CREATE OR REPLACE PACKAGE BODY Exprep_ctx IS\par
+   PROCEDURE Set_ctx IS\par
+      Empnum   NUMBER;\par
+      Countrec NUMBER;\par
+      Cc       NUMBER;\par
+      Role     VARCHAR2(20);\par
+   BEGIN\par
+\par
+      -- SET emp_number:\par
+      SELECT Employee_id INTO Empnum FROM Employee\par
+         WHERE Last_name = SYS_CONTEXT('userenv', 'session_user');\par
+\par
+      DBMS_SESSION.SET_CONTEXT('expenses_reporting','emp_number', Empnum);\par
+\par
+      -- SET ROLE:\par
+      SELECT COUNT (*) INTO Countrec FROM Cost_center WHERE Manager_id=Empnum;\par
+      IF (countrec > 0) THEN\par
+         DBMS_SESSION.SET_CONTEXT('expenses_reporting','exp_role','MANAGER');\par
+      ELSE\par
+         DBMS_SESSION.SET_CONTEXT('expenses_reporting','exp_role','EMPLOYEE');\par
+      END IF;\par
+\par
+      -- SET cc_number:\par
+      SELECT Cost_center_id INTO Cc FROM Employee\par
+         WHERE Last_name = SYS_CONTEXT('userenv','session_user');\par
+      DBMS_SESSION.SET_CONTEXT(expenses_reporting','cc_number',Cc);\par
+   END;\par
+END;\par
+CALL Syntax \par
+\par
+CREATE OR REPLACE TRIGGER Secdemo.Setexpseetx\par
+AFTER LOGON ON DATABASE\par
+CALL Secdemo.Exprep_etx.Set_otx\par
+Responding to System Events through Triggers\par
+\par
+System event publication lets applications subscribe to database events, just like they subscribe to messages from other applications. The system events publication framework includes the following features:\par
+\par
+Infrastructure for publish/subscribe, by making the database an active publisher of events.\par
+\par
+Integration of data cartridges in the server. The system events publication can be used to notify cartridges of state changes in the server.\par
+\par
+Integration of fine-grained access control in the server.\par
+\par
+By creating a trigger, you can specify a procedure that runs when an event occurs. DML events are supported on tables, and system events are supported on DATABASE and SCHEMA. You can turn notification on and off by enabling and disabling the trigger using the ALTER TRIGGER statement.\par
+\par
+This feature is integrated with the Advanced Queueing engine. Publish/subscribe applications use the DBMS_AQ.ENQUEUE() procedure, and other applications such as cartridges use callouts.\par
+\par
+See Also:\par
+Oracle Database SQL Reference\par
+\par
+Oracle Streams Advanced Queuing User's Guide and Reference for details on how to subscribe to published events\par
+\par
+How Events Are Published Through Triggers\par
+\par
+When events are detected by the database, the trigger mechanism executes the action specified in the trigger. As part of this action, you can use the DBMS_AQ package to publish the event to a queue so that subscribers receive notifications.\par
+\par
+Note:\par
+Only system-defined database events can be detected this way. You cannot define your own event conditions.\par
+When an event occurs, the database fires all triggers that are enabled on that event, with some exceptions:\par
+\par
+If the trigger is actually the target of the triggering event, it is not fired. For example, a trigger for all DROP events is not fired when it is dropped itself.\par
+\par
+If a trigger has been modified but not committed within the same transaction as the firing event. For example, recursive DDL within a system trigger might modify a trigger, which prevents the modified trigger from being fired by events within the same transaction.\par
+\par
+You can create more than one trigger on an object. When an event fires more than one trigger, the firing order is not defined and so you should not rely on the triggers being fired in a particular order.\par
+\par
+Publication Context\par
+\par
+When an event is published, certain runtime context and attributes, as specified in the parameter list, are passed to the callout procedure. A set of functions called event attribute functions are provided.\par
+\par
+See Also:\par
+"Event Attribute Functions" for information on event-specific attributes\par
+For each supported system event, you can identify and predefine event-specific attributes for the event. You can choose the parameter list to be any of these attributes, along with other simple expressions. For callouts, these are passed as IN arguments.\par
+\par
+Error Handling\par
+\par
+Return status from publication callout functions for all events are ignored. For example, with SHUTDOWN events, the database cannot do anything with the return status.\par
+\par
+See Also:\par
+"List of Database Events" for details on return status\par
+Execution Model\par
+\par
+Traditionally, triggers execute as the definer of the trigger. The trigger action of an event is executed as the definer of the action (as the definer of the package or function in callouts, or as owner of the trigger in queues). Because the owner of the trigger must have EXECUTE privileges on the underlying queues, packages, or procedure, this behavior is consistent.\par
+\par
+Event Attribute Functions\par
+\par
+When the database fires a trigger, you can retrieve certain attributes about the event that fired the trigger. You can retrieve each attribute with a function call. Table 9-2 describes the system-defined event attributes.\par
+\par
+Note:\par
+To make these attributes available, you must first run the CATPROC.SQL script.\par
+\par
+The trigger dictionary object maintains metadata about events that will be published and their corresponding attributes.\par
+\par
+In earlier releases, these functions were accessed through the SYS package. We recommend you use these public synonyms whose names begin with ora_.\par
+\par
+Table 9-2 System-Defined Event Attributes\par
+\par
+Attribute\tab Type\tab Description\tab Example\par
+ora_client_ip_address\par
+VARCHAR2\par
+Returns IP address of the client in a LOGON event when the underlying protocol is TCP/IP\par
+DECLARE\par
+  v_addr VARCHAR2(11);\par
+  IF (ora_sysevent = 'LOGON') THEN\par
+    v_addr := ora_client_ip_address;\par
+  END IF;\par
+END;\par
+ora_database_name\par
+VARCHAR2(50)\par
+Database name.\par
+DECLARE\par
+  v_db_name VARCHAR2(50);\par
+BEGIN\par
+  v_db_name := ora_database_name;\par
+END;\par
+ora_des_encrypted_password\par
+VARCHAR2\par
+The DES-encrypted password of the user being created or altered.\par
+IF (ora_dict_obj_type = 'USER') THEN  \par
+  INSERT INTO event_table\par
+    VALUES (ora_des_encrypted_password);\par
+END IF;\par
+ora_dict_obj_name\par
+VARCHAR(30)\par
+Name of the dictionary object on which the DDL operation occurred.\par
+INSERT INTO event_table \par
+  VALUES ('Changed object is ' || \par
+           ora_dict_obj_name);\par
+ora_dict_obj_name_list\par
+(name_list OUT ora_name_list_t)\par
+BINARY_INTEGER\par
+Return the list of object names of objects being modified in the event.\par
+IF (ora_sysevent='ASSOCIATE STATISTICS')\par
+  THEN number_modified :=\par
+       ora_dict_obj_name_list(name_list);\par
+END IF;\par
+ora_dict_obj_owner\par
+VARCHAR(30)\par
+Owner of the dictionary object on which the DDL operation occurred.\par
+INSERT INTO event_table \par
+  VALUES ('object owner is' || \par
+           ora_dict_obj_owner);\par
+ora_dict_obj_owner_list\par
+(owner_list OUT ora_name_list_t)\par
+BINARY_INTEGER\par
+Returns the list of object owners of objects being modified in the event.\par
+IF (ora_sysevent='ASSOCIATE STATISTICS') \par
+  THEN number_of_modified_objects :=    \par
+     ora_dict_obj_owner_list(owner_list);\par
+END IF;\par
+ora_dict_obj_type\par
+VARCHAR(20)\par
+Type of the dictionary object on which the DDL operation occurred.\par
+INSERT INTO event_table \par
+  VALUES ('This object is a ' || \par
+           ora_dict_obj_type);\par
+ora_grantee\par
+(user_list OUT ora_name_list_t)\par
+BINARY_INTEGER\par
+Returns the grantees of a grant event in the OUT parameter; returns the number of grantees in the return value.\par
+IF (ora_sysevent = 'GRANT') THEN\par
+  number_of_users=ora_grantee(user_list);\par
+END IF;\par
+ora_instance_num\par
+NUMBER\par
+Instance number.\par
+IF (ora_instance_num = 1) THEN\par
+  INSERT INTO event_table VALUES ('1');\par
+END IF;\par
+ora_is_alter_column\par
+(column_name IN VARCHAR2)\par
+BOOLEAN\par
+Returns true if the specified column is altered.\par
+IF (ora_sysevent = 'ALTER' AND\par
+    ora_dict_obj_type = 'TABLE') THEN \par
+ alter_column := ora_is_alter_column('C');\par
+END IF;\par
+ora_is_creating_nested_table\par
+BOOLEAN\par
+Returns true if the current event is creating a nested table\par
+IF (ora_sysevent = 'CREATE' and\par
+    ora_dict_obj_type = 'TABLE' and\par
+    ora_is_creating_nested_table) THEN \par
+  INSERT INTO event_table\par
+    VALUES ('A nested table is created');\par
+END IF;\par
+ora_is_drop_column\par
+(column_name IN VARCHAR2)\par
+BOOLEAN\par
+Returns true if the specified column is dropped.\par
+IF (ora_sysevent = 'ALTER' AND\par
+    ora_dict_obj_type = 'TABLE') THEN  \par
+ drop_column := ora_is_drop_column('C');\par
+END IF;\par
+ora_is_servererror\par
+BOOLEAN\par
+Returns TRUE if given error is on error stack, FALSE otherwise.\par
+IF (ora_is_servererror(error_number)) THEN\par
+ INSERT INTO event_table\par
+   VALUES ('Server error!!');\par
+END IF;\par
+ora_login_user\par
+VARCHAR2(30)\par
+Login user name.\par
+SELECT ora_login_user \par
+FROM dual;\par
+ora_partition_pos\par
+BINARY_INTEGER\par
+In an INSTEAD OF trigger for CREATE TABLE, the position within the SQL text where you could insert a PARTITION clause.\par
+-- Retrieve ora_sql_txt into\par
+-- sql_text variable first.\par
+v_n := ora_partition_pos;\par
+v_new_stmt := SUBSTR(sql_text,1,v_n - 1)\par
+         || ' ' || my_partition_clause\par
+         || ' ' || SUBSTR(sql_text, v_n));\par
+ora_privilege_list\par
+(privilege_list\par
+ OUT ora_name_list_t)\par
+BINARY_INTEGER\par
+Returns the list of privileges being granted by the grantee or the list of privileges revoked from the revokees in the OUT parameter; returns the number of privileges in the return value.\par
+IF (ora_sysevent = 'GRANT' OR\par
+    ora_sysevent = 'REVOKE') THEN\par
+  number_of_privileges :=\par
+    ora_privilege_list(priv_list);\par
+END IF;\par
+ora_revokee\par
+(user_list OUT ora_name_list_t)\par
+BINARY_INTEGER\par
+Returns the revokees of a revoke event in the OUT parameter; returns the number of revokees in the return value.\par
+IF (ora_sysevent = 'REVOKE') THEN\par
+number_of_users := ora_revokee(user_list);\par
+ora_server_error\par
+NUMBER\par
+Given a position (1 for top of stack), it returns the error number at that position on error stack\par
+INSERT INTO event_table \par
+  VALUES ('top stack error ' || \par
+           ora_server_error(1));\par
+\par
+ora_server_error_depth\par
+BINARY_INTEGER\par
+Returns the total number of error messages on the error stack.\par
+n := ora_server_error_depth;\par
+-- This value is used with other functions -- such as ora_server_error\par
+ora_server_error_msg\par
+(position in binary_integer)\par
+VARCHAR2\par
+Given a position (1 for top of stack), it returns the error message at that position on error stack\par
+INSERT INTO event_table\par
+  VALUES ('top stack error message' ||\par
+           ora_server_error_msg(1));\par
+\par
+ora_server_error_num_params\par
+(position in binary_integer)\par
+BINARY_INTEGER\par
+Given a position (1 for top of stack), it returns the number of strings that have been substituted into the error message using a format like %s.\par
+n := ora_server_error_num_params(1);\par
+\par
+ora_server_error_param\par
+(position in binary_integer,\par
+ param in binary_integer)\par
+VARCHAR2\par
+Given a position (1 for top of stack) and a parameter number, returns the matching substitution value (%s, %d, and so on) in the error message.\par
+-- For example, the second %s in a \par
+-- message: "Expected %s, found %s"\par
+param := ora_server_error_param(1,2);\par
+\par
+ora_sql_txt\par
+(sql_text out ora_name_list_t)\par
+BINARY_INTEGER\par
+Returns the SQL text of the triggering statement in the OUT parameter. If the statement is long, it is broken into multiple PL/SQL table elements. The function return value shows the number of elements are in the PL/SQL table.\par
+sql_text ora_name_list_t;\par
+v_stmt VARCHAR2(2000);\par
+...\par
+n := ora_sql_txt(sql_text);\par
+FOR i IN 1..n LOOP\par
+  v_stmt := v_stmt || sql_text(i);\par
+END LOOP;\par
+INSERT INTO event_table \par
+  VALUES ('text of triggering statement: ' \par
+           || v_stmt);\par
+ora_sysevent\par
+VARCHAR2(20)\par
+System event firing the trigger: Event name is same as that in the syntax.\par
+INSERT INTO event_table\par
+  VALUES (ora_sysevent);\par
+ora_with_grant_option\par
+BOOLEAN\par
+Returns true if the privileges are granted with grant option.\par
+IF (ora_sysevent = 'GRANT' and\par
+    ora_with_grant_option = TRUE) THEN\par
+  INSERT INTO event_table \par
+    VALUES ('with grant option');\par
+END IF;\par
+space_error_info\par
+(error_number OUT NUMBER,\par
+ error_type OUT VARCHAR2,\par
+ object_owner OUT VARCHAR2,\par
+ table_space_name OUT \par
+  VARCHAR2,\par
+ object_name OUT VARCHAR2,\par
+ sub_object_name OUT VARCHAR2)\par
+BOOLEAN\par
+Returns true if the error is related to an out-of-space condition, and fills in the OUT parameters with information about the object that caused the error.\par
+IF (space_error_info(eno,typ,owner,ts,obj, \par
+                     subobj) = TRUE) THEN\par
+  DBMS_OUTPUT.PUT_LINE('The object '|| obj \par
+               || ' owned by ' || owner ||\par
+               ' has run out of space.');\par
+END IF;\par
+\par
+List of Database Events\par
+\par
+This section describes important system events and client events.\par
+\par
+System Events\par
+\par
+System events are related to entire instances or schemas, not individual tables or rows. Triggers created on startup and shutdown events must be associated with the database instance. Triggers created on error and suspend events can be associated with either the database instance or a particular schema.\par
+\par
+Table 9-3 contains a list of system manager events.\par
+\par
+Table 9-3 System Manager Events\par
+\par
+Event\tab When Fired?\tab Conditions\tab Restrictions\tab Transaction\tab Attribute Functions\par
+STARTUP\par
+When the database is opened.\par
+None allowed\par
+No database operations allowed in the trigger.\par
+Return status ignored.\par
+Starts a separate transaction and commits it after firing the triggers.\par
+ora_sysevent\par
+ora_login_user\par
+ora_instance_num\par
+ora_database_name\par
+SHUTDOWN\par
+Just before the server starts the shutdown of an instance.\par
+This lets the cartridge shutdown completely. For abnormal instance shutdown, this event may not be fired.\par
+None allowed\par
+No database operations allowed in the trigger.\par
+Return status ignored.\par
+Starts a separate transaction and commits it after firing the triggers.\par
+ora_sysevent\par
+ora_login_user\par
+ora_instance_num\par
+ora_database_name\par
+DB_ROLE_CHANGE\par
+When the database is opened for the first time after a role change.\par
+None allowed\par
+Return status ignored.\par
+Starts a separate transaction and commits it after firing the triggers.\par
+ora_sysevent\par
+ora_login_user\par
+ora_instance_num\par
+ora_database_name\par
+SERVERERROR\par
+When the error eno occurs. If no condition is given, then this event fires whenever an error occurs.\par
+The trigger does not fire on ORA-1034, ORA-1403, ORA-1422, ORA-1423, and ORA-4030 because they are not true errors or are too serious to continue processing. It also fails to fire on ORA-18 and ORA-20 because a process is not available to connect to the database to record the error.\par
+ERRNO = eno\par
+Depends on the error.\par
+Return status ignored.\par
+Starts a separate transaction and commits it after firing the triggers.\par
+ora_sysevent\par
+ora_login_user\par
+ora_instance_num\par
+ora_database_name\par
+ora_server_error\par
+ora_is_servererror\par
+space_error_info\par
+\par
+Client Events\par
+\par
+Client events are the events related to user logon/logoff, DML, and DDL operations. For example:\par
+\par
+CREATE OR REPLACE TRIGGER On_Logon  \par
+  AFTER LOGON  \par
+  ON The_user.Schema  \par
+BEGIN  \par
+  Do_Something;  \par
+END;  \par
+\par
+The LOGON and LOGOFF events allow simple conditions on UID and USER. All other events allow simple conditions on the type and name of the object, as well as functions like UID and USER.\par
+\par
+The LOGON event starts a separate transaction and commits it after firing the triggers. All other events fire the triggers in the existing user transaction.\par
+\par
+The LOGON and LOGOFF events can operate on any objects. For all other events, the corresponding trigger cannot perform any DDL operations, such as DROP and ALTER, on the object that caused the event to be generated.\par
+\par
+The DDL allowed inside these triggers is altering, creating, or dropping a table, creating a trigger, and compile operations.\par
+\par
+If an event trigger becomes the target of a DDL operation (such as CREATE TRIGGER), it cannot be fired later during the same transaction\par
+\par
+Table 9-4 contains a list of client events.\par
+\par
+Table 9-4 Client Events\par
+\par
+Event\tab When Fired?\tab Attribute Functions\par
+BEFORE ALTER\par
+\par
+AFTER ALTER\par
+When a catalog object is altered.\par
+ora_sysevent \par
+ora_login_user\par
+ora_instance_num\par
+ora_database_name\par
+ora_dict_obj_type \par
+ora_dict_obj_name\par
+ora_dict_obj_owner\par
+ora_des_encrypted_password\par
+ (for ALTER USER events)\par
+ora_is_alter_column\par
+ (for ALTER TABLE events)\par
+ora_is_drop_column\par
+ (for ALTER TABLE events)\par
+BEFORE DROP\par
+\par
+AFTER DROP\par
+When a catalog object is dropped.\par
+ora_sysevent\par
+ora_login_user\par
+ora_instance_num\par
+ora_database_name\par
+ora_dict_obj_type\par
+ora_dict_obj_name\par
+ora_dict_obj_owner\par
+BEFORE ANALYZE\par
+\par
+AFTER ANALYZE\par
+When an analyze statement is issued\par
+ora_sysevent\par
+ora_login_user\par
+ora_instance_num\par
+ora_database_name\par
+ora_dict_obj_name\par
+ora_dict_obj_type\par
+ora_dict_obj_owner\par
+BEFORE ASSOCIATE STATISTICS\par
+\par
+AFTER ASSOCIATE STATISTICS\par
+When an associate statistics statement is issued\par
+ora_sysevent\par
+ora_login_user\par
+ora_instance_num\par
+ora_database_name\par
+ora_dict_obj_name\par
+ora_dict_obj_type\par
+ora_dict_obj_owner\par
+ora_dict_obj_name_list\par
+ora_dict_obj_owner_list\par
+BEFORE AUDIT\par
+AFTER AUDIT\par
+\par
+BEFORE NOAUDIT\par
+AFTER NOAUDIT\par
+When an audit or noaudit statement is issued\par
+ora_sysevent\par
+ora_login_user\par
+ora_instance_num\par
+ora_database_name\par
+BEFORE COMMENT\par
+\par
+AFTER COMMENT\par
+When an object is commented\par
+ora_sysevent\par
+ora_login_user\par
+ora_instance_num\par
+ora_database_name\par
+ora_dict_obj_name\par
+ora_dict_obj_type\par
+ora_dict_obj_owner\par
+BEFORE CREATE \par
+\par
+AFTER CREATE\par
+When a catalog object is created.\par
+ora_sysevent \par
+ora_login_user\par
+ora_instance_num\par
+ora_database_name\par
+ora_dict_obj_type \par
+ora_dict_obj_name\par
+ora_dict_obj_owner\par
+ora_is_creating_nested_table\par
+ (for CREATE TABLE events)\par
+BEFORE DDL\par
+\par
+AFTER DDL\par
+When most SQL DDL statements are issued. Not fired for ALTER DATABASE, CREATE CONTROLFILE, CREATE DATABASE, and DDL issued through the PL/SQL procedure interface, such as creating an advanced queue.\par
+ora_sysevent\par
+ora_login_user\par
+ora_instance_num\par
+ora_database_name\par
+ora_dict_obj_name\par
+ora_dict_obj_type\par
+ora_dict_obj_owner\par
+BEFORE DISASSOCIATE STATISTICS\par
+\par
+AFTER DISASSOCIATE STATISTICS\par
+When a disassociate statistics statement is issued\par
+ora_sysevent\par
+ora_login_user\par
+ora_instance_num\par
+ora_database_name\par
+ora_dict_obj_name\par
+ora_dict_obj_type\par
+ora_dict_obj_owner\par
+ora_dict_obj_name_list\par
+ora_dict_obj_owner_list\par
+BEFORE GRANT\par
+\par
+AFTER GRANT\par
+When a grant statement is issued\par
+ora_sysevent\par
+ora_login_user\par
+ora_instance_num\par
+ora_database_name\par
+ora_dict_obj_name\par
+ora_dict_obj_type\par
+ora_dict_obj_owner\par
+ora_grantee\par
+ora_with_grant_option\par
+ora_privileges\par
+BEFORE LOGOFF\par
+At the start of a user logoff\par
+ora_sysevent\par
+ora_login_user\par
+ora_instance_num\par
+ora_database_name\par
+AFTER LOGON\par
+After a successful logon of a user.\par
+ora_sysevent\par
+ora_login_user\par
+ora_instance_num\par
+ora_database_name\par
+ora_client_ip_address\par
+BEFORE RENAME\par
+\par
+AFTER RENAME\par
+When a rename statement is issued.\par
+ora_sysevent\par
+ora_login_user\par
+ora_instance_num\par
+ora_database_name\par
+ora_dict_obj_name\par
+ora_dict_obj_owner\par
+ora_dict_obj_type\par
+BEFORE REVOKE\par
+\par
+AFTER REVOKE\par
+When a revoke statement is issued\par
+ora_sysevent\par
+ora_login_user\par
+ora_instance_num\par
+ora_database_name\par
+ora_dict_obj_name\par
+ora_dict_obj_type\par
+ora_dict_obj_owner\par
+ora_revokee\par
+ora_privileges\par
+AFTER SUSPEND\par
+After a SQL statement is suspended because of an out-of-space condition. The trigger should correct the condition so the statement can be resumed.\par
+ora_sysevent\par
+ora_login_user\par
+ora_instance_num\par
+ora_database_name\par
+ora_server_error\par
+ora_is_servererror\par
+space_error_info\par
+BEFORE TRUNCATE\par
+\par
+AFTER TRUNCATE\par
+When an object is truncated\par
+ora_sysevent\par
+ora_login_user\par
+ora_instance_num\par
+ora_database_name\par
+ora_dict_obj_name\par
+ora_dict_obj_type\par
+ora_dict_obj_owner\par
+\par
+Go to previous page\par
+Previous\tab Go to next page\par
+Next\par
+Oracle\par
+Copyright \'a9 1996, 2005, Oracle. All rights reserved.\par
+Legal Notices\tab\par
+Go to Documentation Home\par
+Home\tab Go to Book List\par
+Book List\tab Go to Table of Contents\par
+Contents\tab Go to Index\par
+Index\tab Go to Master Index\par
+Master Index\tab Go to Feedback page\par
+Contact Us\par
+}
+ 

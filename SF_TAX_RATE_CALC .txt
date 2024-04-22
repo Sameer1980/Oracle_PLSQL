@@ -1,0 +1,18 @@
+CREATE OR REPLACE FUNCTION SF_TAX_RATE_CALC (EMP_ID NUMBER) RETURN NUMBER AS
+
+V_SAL EMPLOYEES.SALARY%TYPE;
+
+BEGIN
+SELECT DECODE(TRUNC(SALARY/2000),0,0.00,
+                           1,0.09,
+                           2,0.20,
+                           3,0.30,
+                           4,0.40,
+                           5,0.42,
+                           6,0.44,
+                             0.45) INTO V_SAL FROM EMPLOYEES WHERE EMPLOYEE_ID=EMP_ID ;
+                                                       
+
+RETURN(V_SAL);
+
+END;

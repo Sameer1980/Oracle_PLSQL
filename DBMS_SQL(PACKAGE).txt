@@ -1,0 +1,19 @@
+create table temp_emp as select * from employees
+
+
+create or replace function delete_all_rows(tab_name varchar2) 
+return number is
+csr_id integer;
+rows_del number;
+begin
+csr_id:=dbms_sql.open_cursor;
+dbms_sql.parse(csr_id,'delete from '||tab_name,dbms_sql.native);
+rows_del:=dbms_sql.execute(csr_id);
+dbms_sql.close_cursor(csr_id);
+return rows_del;
+end;
+
+
+begin
+dbms_output.put_line('Rows deleted: '||delete_all_rows('temp_emp'));
+end;

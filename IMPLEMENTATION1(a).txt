@@ -1,0 +1,29 @@
+------------- DATABASE SHUTDOWN AUDIT ------------------
+  FIRST CREATE A TABLE:
+------------------------------
+
+1) CREATE TABLE DB_EVENT_AUDIT_TAB
+(USER_NAME VARCHAR2(32),
+EVENT_DATE DATE,
+ACTION VARCHAR2(25));
+
+
+2)CREATE A PROCEDURE:
+-------------------------------
+
+CREATE OR REPLACE PROCEDURE DB_EVENT_AUDIT_PROC_1 (USER_ID VARCHAR2)AS
+BEGIN
+INSERT INTO DB_EVENT_AUDIT_TAB(USER_NAME,EVENT_DATE,ACTION) VALUES(USER,SYSDATE,'Shut Down');
+END;
+
+3) Grant create any trigger to hr;
+   grant administer database trigger to hr;
+
+CREATE  THE TRIGGER:
+---------------------------------
+
+4)CREATE OR REPLACE TRIGGER DB_EVENT_AUDIT_TRIG
+BEFORE SHUTDOWN ON DATABASE
+begin 
+DB_EVENT_AUDIT_PROC_1(ORA_LOGIN_USER); 
+end;

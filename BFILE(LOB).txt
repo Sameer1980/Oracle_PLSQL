@@ -1,0 +1,11 @@
+create table graphics_table (
+  bfile_id number,
+  bfile_desc varchar2(30),
+  bfile_loc bfile,
+  bfile_type varchar2(4))
+
+INSERT INTO graphics_table
+  VALUES(1,'Amsyterdam',bfilename('GIF_FILES','C:\Testloc\Amsterdam.jpg'),'JPEG');
+
+The BFILE locators are loaded into the table using the BFILENAME function and a standard insert statement.
+  

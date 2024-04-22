@@ -1,0 +1,12 @@
+create or replace trigger emp_dept_fk_trg
+after update of department_id on emp 
+for each row
+begin
+insert into dept values
+(:new.department_id,'Dept '||:new.department_id,null,null);
+exception
+when dup_val_on_index then
+null;
+end;
+
+update emp set department_id=999 where employee_id=170

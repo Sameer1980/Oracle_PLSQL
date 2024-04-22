@@ -1,0 +1,15 @@
+create or replace trigger check_salary
+before insert or update of salary,job_id on demo_emp
+for each row
+when (new.job_id<>'AD_PRES')
+declare
+minsal demo_emp.salary%type;
+maxsal demo_emp.salary%type;
+begin
+select min(salary),max(salary) into minsal,maxsal from demo_emp where job_id=:new.job_id;
+if :new.salary<minsal or
+:new.salary>maxsal then
+raise_application_error(-20505,'Out of range');
+end if;
+end;
+ 

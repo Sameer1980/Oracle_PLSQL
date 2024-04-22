@@ -1,0 +1,104 @@
+------------------------------------------------------------------------ INDEX BY TABLE --------------------------------------------------
+
+DECLARE
+TYPE TAB1 IS TABLE OF EMPLOYEES.LAST_NAME%TYPE
+INDEX BY BINARY_INTEGER;
+TYPE TAB2 IS TABLE OF EMPLOYEES.DEPARTMENT_ID%TYPE
+INDEX BY BINARY_INTEGER;
+
+T1 TAB1;
+T2 TAB2;
+i BINARY_INTEGER:=0;
+CURSOR EMP_CUR IS SELECT LAST_NAME,DEPARTMENT_ID FROM EMPLOYEES WHERE EMPLOYEE_ID<114 ORDER BY EMPLOYEE_ID;
+BEGIN
+FOR REC IN EMP_CUR LOOP
+T1(i):=REC.LAST_NAME;
+T2(i):=REC.DEPARTMENT_ID;
+DBMS_OUTPUT.PUT_LINE('FROM TABLE1: '||T1(i)||'| '||'FROM TABLE2: '||T2(i));
+END LOOP;
+END;
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+create or replace procedure plsql_table1 
+as
+type emp_tab is table of employees%rowtype index by binary_integer;
+emp1 emp_tab;
+cursor emp_cur is select * from employees;
+i pls_integer:=0;
+begin
+for rec in emp_cur loop
+i:=i+1;
+emp1(i):=rec;
+end loop;
+dbms_output.put_line('ID'||'           '||'Name'||'         '||'Hire Date'||'          '||'Salary'||'        '||'Job ID');
+dbms_output.put_line('------'||' '||'-------------------'||' '||'-------------'||'  '||'--------------'||' '||'---------------');
+for i in emp1.first..emp1.last loop
+dbms_output.put_line(emp1(i).employee_id||'     |    '||emp1(i).first_name||' '||emp1(i).last_name||' |  '||emp1(i).hire_date||' |  '||emp1(i).salary||'  | '||emp1(i).job_id);
+dbms_output.put_line('--------------------------------------------------------------------------------------------------------------------------------------------');
+end loop;
+end;
+
+
+----------------------------------------------- NESTED TABLE -----------------------------------------------------------------------------------------------------
+
+
+
+declare 
+type n_tab_T is table of number;
+nt n_tab_T := n_tab_T();
+begin
+for i in 1 .. 10 loop
+nt.EXTEND;
+nt(i):=i;
+dbms_output.put_line(nt(i));
+end loop;
+end ;
+
+
+
+Nested tables are similar to index by table but these can be stored in database columns but index by tables cannot be stored in database columns.
+
+
+
+A Nested tablecan be considered as a single-column table that can either be in memory, or as a column in a database table. A nested table is quite similar to a VARRAY with the exception that the order of the elements is not static. Elements can be deleted or added anywhere in the nested table where as a VARRAY can only add or delete elements from the end of the array. Nested Table is known as a sparse collection because a nested table can contain empty elements.
+
+
+
+
+--------IN SQL-----------
+CREATE OR REPLACE TYPE TYPE_ORDERS IS TABLE OF VARCHAR2(100);
+
+CREATE TABLE ORDERS(
+ORDER_ID NUMBER,
+ORDER_NAME TYPE_ORDERS)
+NESTED TABLE ORDER_NAME STORE AS NESTED_ORDERS;
+
+INSERT INTO ORDERS 
+VALUES (1,TYPE_ORDERS('ORDER 1','ORDER 2','ORDER 3'));
+
+INSERT INTO ORDERS 
+VALUES (2,TYPE_ORDERS('ORDER 21','ORDER 22','ORDER 23'));
+
+SELECT * FROM ORDERS
+
+SELECT T1.ORDER_ID,T2.* FROM ORDERS T1,TABLE(ORDER_NAME) T2
+
+SELECT VALUE(T) FROM THE (SELECT ORDER_NAME FROM ORDERS WHERE ORDER_ID=2)T
+
+------------ IN PLSQL ------------------------------------------------------------------------
+
+DECLARE 
+TYPE TYPE_ORDERS IS TABLE OF VARCHAR2(100);
+ORDER_NAME TYPE_ORDERS:= TYPE_ORDERS();
+BEGIN
+FOR I IN 1 .. 5 LOOP
+ORDER_NAME.EXTEND ;
+ORDER_NAME(I):= 'ORDER NUMBER '||TO_CHAR(I);
+END LOOP;
+DBMS_OUTPUT.PUT_LINE('LIST OF ORDERS FOR '||TO_CHAR(SYSDATE));
+FOR I IN ORDER_NAME.FIRST .. ORDER_NAME.LAST LOOP
+DBMS_OUTPUT.PUT_LINE(ORDER_NAME(I));
+END LOOP;
+END ;
+
+ 

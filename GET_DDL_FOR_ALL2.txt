@@ -1,0 +1,32 @@
+set pagesize 0
+set long 90000
+set feedback off
+set echo off 
+set heading 999
+set lines 100
+
+select 
+   dbms_metadata.GET_DDL(u.object_type,u.object_name,'HR')
+from 
+   dba_objects u
+where 
+   owner = 'HR';
+
+
+select dbms_metadata.get_granted_ddl('role_grant','') from dual;
+ 
+select dbms_metadata.get_granted_ddl('object_grant','') from dual;
+
+
+And here we can get the DDL for all tablespaces:
+set head off echo off
+select 'select dbms_metadata.get_ddl(''TABLESPACE'',''' 
+|| tablespace_name || ''') from dual;' from dba_tablespaces
+
+
+Using dbms_metadata for roles
+
+SELECT DBMS_METADATA.GET_GRANTED_DDL('ROLE_GRANT','SCOTT') from dual;
+SELECT DBMS_METADATA.GET_GRANTED_DDL('OBJECT_GRANT','SCOTT') from dual;
+SELECT DBMS_METADATA.GET_GRANTED_DDL('SYSTEM_GRANT','SCOTT') from dual;
+SELECT dbms_metadata.get_ddl('ROLE','RESOURCE') from dual;

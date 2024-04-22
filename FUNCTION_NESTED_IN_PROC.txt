@@ -1,0 +1,11 @@
+create or replace procedure employee_sal (p_empid number) as
+emp employees%rowtype;
+function tax(salary varchar2) return number as
+begin
+return salary * 0.825;
+end;
+
+begin
+select * into emp from employees where employee_id=p_empid;
+dbms_output.put_line('Tax: '||tax(emp.salary));
+end;

@@ -1,0 +1,27 @@
+create or replace procedure normal_cursor (p_empid employees.employee_id%type) as
+cursor emp_cur is
+select * from employees where employee_id=p_empid;
+v_emp employees%rowtype;
+begin
+dbms_output.put_line('--------------------------------- Employee Details-----------------------------------------------------------------------------------------------------');
+dbms_output.put_line('                                            ');
+dbms_output.put_line('Name:');
+dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------');
+open emp_cur;
+loop
+fetch emp_cur into v_emp;
+dbms_output.put_line(v_emp.first_name||' '||v_emp.last_name);
+exit when emp_cur%rowcount=1;
+end loop;
+close emp_cur;
+dbms_output.put_line('                                            ');
+dbms_output.put_line('Details:');
+dbms_output.put_line('----------------------------------------------------------------------------------------------------------------------');
+for rec in (select * from employees where employee_id=p_empid) loop
+dbms_output.put_line('Salary:'|| rec.salary);
+dbms_output.put_line('Job ID:'|| rec.job_id);
+dbms_output.put_line('Hire date:'|| rec.hire_date);
+end loop;
+end;
+
+

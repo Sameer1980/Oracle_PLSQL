@@ -1,0 +1,6 @@
+create or replace function ordinal_date (p_date varchar2) return varchar2 is
+v_date varchar2(35);
+begin
+select  to_char(to_date(p_date,'dd-mm-rr'),'Ddthsp Month,yyyy')into v_date from dual;
+return v_date;
+end;

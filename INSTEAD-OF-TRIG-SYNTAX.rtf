@@ -1,0 +1,519 @@
+{\rtf1\ansi\ansicpg1252\deff0\deflang1033{\fonttbl{\f0\fswiss\fcharset0 Arial;}}
+{\*\generator Msftedit 5.41.15.1507;}\viewkind4\uc1\pard\f0\fs20\par
+PSOUG Home\tab Code Snippets\tab Oracle Lookup\tab Oracle Reference\tab Oracle Error Codes\tab Oracle Functions\tab PSOUG Forum\par
+\par
+\par
+\tab\tab\par
+\tab CODE\par
+Oracle Code Library\tab\par
+\tab\tab\par
+\tab\tab\par
+\tab JOBS\par
+Find Or Post Oracle Jobs\tab\par
+\tab\tab\par
+\tab\tab\par
+\tab FORUM\par
+Oracle Discussion & Chat\tab\par
+\tab\tab\par
+\par
+\par
+PSOUG Home\tab Code Snippets\tab Oracle Reference\tab Oracle Functions\tab PSOUG Forum\tab Oracle Blogs\tab Bookmark and Share\par
+ \par
+ Search the Reference Library pages:  \tab\par
+  \par
+ \par
+\par
+ Free\par
+Oracle Magazine\par
+Subscriptions\par
+and Oracle White Papers\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+Oracle Instead-Of Triggers\par
+Version 11.1\par
+ \par
+General\par
+\par
+Data Dictionary Objects\tab\par
+trigger$\tab  dba_triggers\tab  all_triggers\tab  user_triggers\par
+System Privileges\tab create trigger\par
+create any trigger\par
+administer database trigger\par
+alter any trigger\par
+drop any trigger\par
+Notes on Updatable Views\par
+\par
+An updatable view is one you can use to insert, update, or delete base table rows. You can create a view to be inherently updatable, or you can create an INSTEAD OF trigger on any view to make it updatable.\par
+\par
+To learn whether and in what ways the columns of an inherently updatable view can be modified, query the USER_UPDATABLE_COLUMNS data dictionary view. The information displayed by this view is meaningful only for inherently updatable views. For a view to be inherently updatable, the following conditions must be met:\par
+\par
+Each column in the view must map to a column of a single table. For example, if a view column maps to the output of a TABLE clause (an unnested collection), then the view is not inherently updatable.\par
+\par
+The view must not contain any of the following constructs:\par
+A set operator\par
+A DISTINCT operator\par
+An aggregate or analytic function\par
+A GROUP BY, ORDER BY, MODEL, CONNECT BY, or START WITH clause\par
+A collection expression in a SELECT list\par
+A subquery in a SELECT list\par
+A subquery designated WITH READ ONLY\par
+Joins, with some exceptions, as documented in Oracle Database Administrator's Guide\par
+In addition, if an inherently updatable view contains pseudocolumns or expressions, then you cannot update base table rows with an UPDATE statement that refers to any of these pseudocolumns or expressions.\par
+\par
+If you want a join view to be updatable, then all of the following conditions must be true:\par
+\par
+1.  The DML statement must affect only one table underlying the join.\par
+\par
+2.  For an INSERT statement, the view must not be created WITH CHECK OPTION, and all columns into which values are inserted must come from a key-preserved table. A key-preserved table is one for which every primary key or unique key value in the base table is also unique in the join view.\par
+\par
+3.  For an UPDATE statement, all columns updated must be extracted from a key-preserved table. If the view was created WITH CHECK OPTION, then join columns and columns taken from tables that are referenced more than once in the view must be shielded from UPDATE.\par
+\par
+For a DELETE statement, if the join results in more than one key-preserved table, then Oracle Database deletes from the first table named in the FROM clause, whether or not the view was created WITH CHECK OPTION.\par
+\par
+ \par
+\par
+Demo Tables\par
+\par
+\par
+Instead Of Demo Tables And Constraints\tab CREATE TABLE employee (\par
+employee_no   VARCHAR2(8),\par
+last_name     VARCHAR2(25) NOT NULL,\par
+first_name    VARCHAR2(10) NOT NULL,\par
+dept_code     VARCHAR2(3) NOT NULL,\par
+active_flag   VARCHAR2(1) DEFAULT 'Y',\par
+mod_user_id   VARCHAR2(30) DEFAULT USER,\par
+mod_user_date DATE DEFAULT SYSDATE);\par
+\par
+CREATE TABLE permission_code (\par
+pcode             VARCHAR2(2),\par
+pcode_description VARCHAR2(40) NOT NULL,\par
+mod_user_id       VARCHAR2(30) DEFAULT USER,\par
+mod_user_date     DATE DEFAULT SYSDATE);\par
+\par
+CREATE TABLE user_role (\par
+dept_code     VARCHAR2(3),\par
+pcode         VARCHAR2(2),\par
+access_level  VARCHAR2(1) DEFAULT 'R',\par
+mod_user_id   VARCHAR2(30) DEFAULT USER,\par
+mod_user_date DATE DEFAULT SYSDATE);\par
+\par
+CREATE TABLE user_permission (\par
+employee_no   VARCHAR2(8),\par
+pcode         VARCHAR2(2),\par
+access_level  VARCHAR2(1) DEFAULT 'R',\par
+mod_user_id   VARCHAR2(30) DEFAULT USER,\par
+mod_user_date DATE DEFAULT SYSDATE);\par
+\par
+CREATE TABLE dept_code (\par
+dept_code VARCHAR2(3), \par
+dept_name VARCHAR2(30));\par
+\par
+CREATE TABLE test (\par
+test VARCHAR2(20));\par
+\par
+Instead Of Trigger Demo Data\tab  -- employee table\par
+INSERT INTO employee\par
+(employee_no, last_name, first_name, dept_code, active_flag)\par
+VALUES\par
+('5001', 'Mark', 'Townsend', 'LCR', 'Y');\par
+\par
+INSERT INTO employee\par
+(employee_no, last_name, first_name, dept_code, active_flag)\par
+VALUES\par
+('3996', 'Dacko', 'Carol', 'ESR', 'Y');\par
+\par
+INSERT INTO employee\par
+(employee_no, last_name, first_name, dept_code, active_flag)\par
+VALUES\par
+('6842', 'Morgan', 'Daniel', 'ADM', 'Y');\par
+\par
+-- permission_code table data\par
+INSERT INTO permission_code \par
+VALUES ('BO', 'BILLING OPTIONS', USER, SYSDATE);\par
+\par
+INSERT INTO permission_code \par
+VALUES ('CL', 'CLASS CODES', USER, SYSDATE);\par
+\par
+INSERT INTO permission_code \par
+VALUES ('CR', 'CREWS', USER, SYSDATE);\par
+\par
+INSERT INTO permission_code \par
+VALUES ('CT', 'CREW TYPES', USER, SYSDATE);\par
+\par
+INSERT INTO permission_code \par
+VALUES ('CU', 'CUSTOMER TYPES', USER, SYSDATE);\par
+\par
+INSERT INTO permission_code \par
+VALUES ('DH', 'WORKORDER DASH NUMBERS', USER, SYSDATE);\par
+\par
+INSERT INTO dept_code (dept_code, dept_name)\par
+VALUES ('ADM', 'ADMINISTRATION');\par
+\par
+INSERT INTO dept_code (dept_code, dept_name)\par
+VALUES ('COO', 'COORDINATOR');\par
+\par
+INSERT INTO dept_code (dept_code, dept_name)\par
+VALUES ('ESE', 'ELECTRICAL SERVICE');\par
+\par
+INSERT INTO dept_code (dept_code, dept_name)\par
+VALUES ('ESR', 'ELECTRICAL SERVICE REP');\par
+\par
+INSERT INTO dept_code (dept_code, dept_name)\par
+VALUES ('ENG', 'ENGINEER');\par
+\par
+INSERT INTO dept_code (dept_code, dept_name)\par
+VALUES ('LCR', 'LINE CREW');\par
+\par
+INSERT INTO dept_code (dept_code, dept_name)\par
+VALUES ('MCR', 'METER CREW');\par
+\par
+INSERT INTO dept_code (dept_code, dept_name)\par
+VALUES ('NWE', 'NETWORK ENGINEER');\par
+\par
+INSERT INTO dept_code (dept_code, dept_name)\par
+VALUES ('SKA', 'SKETCH ARTIST');\par
+\par
+INSERT INTO user_role\par
+(dept_code, pcode, access_level)\par
+SELECT r.dept_code, p.pcode, 'R'\par
+FROM dept_code r, permission_code p;\par
+\par
+INSERT INTO user_permission\par
+(employee_no, pcode, access_level)\par
+SELECT e.employee_no, r.pcode, r.access_level\par
+FROM employee e, user_role r\par
+WHERE e.dept_code = r.dept_code;\par
+\par
+COMMIT;\par
+ \par
+\par
+Non Key-Preserved Relational Views\par
+\par
+\par
+Build these views for later use in demonstrating Instead-Of Triggers\tab  -- word "view" used in naming for demo purposes only\par
+CREATE OR REPLACE VIEW role_permission_view AS\par
+SELECT r.dept_code, r.pcode, p.pcode_description, r.access_level\par
+FROM user_role r, permission_code p\par
+WHERE r.pcode = p.pcode;\par
+\par
+desc role_permission_view\par
+\par
+col data_type format a15\par
+\par
+SELECT column_name, data_type, data_length\par
+FROM user_tab_cols\par
+WHERE table_name = 'ROLE_PERMISSION_VIEW';\par
+\par
+col type format a30\par
+\par
+SELECT column_name, nullable,\par
+data_type || '(' ||  data_length || ')' TYPE\par
+FROM user_tab_cols\par
+WHERE table_name = 'ROLE_PERMISSION_VIEW';\par
+\par
+SELECT column_name, DECODE(nullable, 'N', 'NOT NULL', NULL) "Null?",\par
+data_type || '(' ||  data_length || ')' TYPE\par
+FROM user_tab_cols\par
+WHERE table_name = 'ROLE_PERMISSION_VIEW';\par
+\par
+-- this will fail\par
+INSERT INTO role_permission_view\par
+(dept_code, pcode, pcode_description, access_level)\par
+VALUES\par
+('DAN', 'DM', 'Morgan', 'W');\par
+\par
+-- this will fail too\par
+UPDATE role_permission_view\par
+SET access_level = 'W'\par
+WHERE dept_code = 'SKA';\par
+\par
+-- another relational view\par
+CREATE OR REPLACE VIEW employee_permission_view AS\par
+SELECT e.employee_no, \par
+e.first_name || ' ' || e.last_name NAME, e.dept_code,\par
+r.pcode, r.access_level DEFACCLVL, u.access_level,\par
+p.pcode_description\par
+FROM employee e, user_role r, user_permission u, permission_code p\par
+WHERE e.dept_code = r.dept_code\par
+AND e.employee_no = u.employee_no\par
+AND r.pcode = u.pcode\par
+AND r.pcode = p.pcode\par
+ORDER BY 1,3;\par
+\par
+desc employee_permission_view\par
+\par
+SELECT column_name, DECODE(nullable, 'N', 'NOT NULL', NULL) "Null?",\par
+data_type || '(' ||  data_length || ')' TYPE\par
+FROM user_tab_cols\par
+WHERE table_name = 'EMPLOYEE_PERMISSION_VIEW';\par
+\par
+SELECT * FROM employee_permission_view;\par
+\par
+-- this will fail too\par
+DELETE FROM employee_permission_view\par
+WHERE dept_code = 'LCR';\par
+\par
+Instead Of Insert Trigger Demo\tab CREATE OR REPLACE TRIGGER ioft_insert_role_perm\par
+INSTEAD OF INSERT\par
+ON role_permission_view\par
+FOR EACH ROW\par
+DECLARE\par
+ x INTEGER;\par
+BEGIN\par
+  SELECT COUNT(*)\par
+  INTO x\par
+  FROM permission_code\par
+  WHERE pcode = :NEW.pcode;\par
+\par
+  IF x = 0 THEN\par
+    INSERT INTO permission_code\par
+    (pcode, pcode_description, mod_user_id, mod_user_date)\par
+    VALUES\par
+    (:NEW.pcode, 'New Code', USER, SYSDATE);\par
+  END IF;\par
+\par
+  SELECT COUNT(*)\par
+  INTO x\par
+  FROM dept_code\par
+  WHERE dept_code = :NEW.dept_code;\par
+\par
+  IF x = 0 THEN\par
+    INSERT INTO dept_code\par
+    (dept_code, dept_name)\par
+    VALUES\par
+    (:NEW.dept_code, 'New Dept');\par
+  END IF;\par
+\par
+  INSERT INTO user_role\par
+  (dept_code, pcode, mod_user_id)\par
+  VALUES\par
+  (:NEW.dept_code, :NEW.pcode, 'Morgan');\par
+\par
+  INSERT INTO test\par
+  (test)\par
+  VALUES\par
+  ('Z'); \par
+END ioft_insert_role_perm;\par
+/\par
+\par
+SELECT *\par
+FROM permission_code\par
+WHERE pcode = 'DM';\par
+\par
+SELECT *\par
+FROM dept_code\par
+WHERE dept_code = 'DAN';\par
+\par
+SELECT *\par
+FROM user_role\par
+WHERE dept_code = 'DAN';\par
+\par
+SELECT * FROM test;\par
+\par
+-- insert works\par
+INSERT INTO role_permission_view\par
+(dept_code, pcode, pcode_description, access_level)\par
+VALUES\par
+('DAN', 'DM', 'Morgan', 'W');\par
+\par
+-- view results\par
+SELECT *\par
+FROM permission_code\par
+WHERE pcode = 'DM';\par
+\par
+SELECT *\par
+FROM dept_code\par
+WHERE dept_code = 'DAN';\par
+\par
+SELECT *\par
+FROM user_role\par
+WHERE dept_code = 'DAN';\par
+\par
+SELECT * FROM test;\par
+\par
+Instead Of Update Trigger Demo\tab  CREATE OR REPLACE TRIGGER ioft_role_perm\par
+INSTEAD OF UPDATE\par
+ON role_permission_view\par
+FOR EACH ROW\par
+BEGIN\par
+  UPDATE user_role\par
+  SET access_level = :NEW.access_level,\par
+  mod_user_id = USER,\par
+  mod_user_date = SYSDATE\par
+  WHERE dept_code = :OLD.dept_code\par
+  AND permission_code = :OLD.permission_code; \par
+END ioft_role_perm;\par
+/\par
+\par
+SELECT trigger_name, trigger_type, action_type,\par
+description\par
+FROM user_triggers; \par
+\par
+SELECT * FROM employee_permission_view;\par
+\par
+UPDATE role_permission_view\par
+SET access_level = 'W'\par
+WHERE dept_code = 'SKA';\par
+\par
+SELECT * FROM employee_permission_view;\par
+\par
+UPDATE employee_permission\par
+SET access_level = 'Z';\par
+\par
+Instead Of Delete Trigger Demo\tab  /* what does it mean to delete LCR from employee_permission_view?\par
+Does it mean delete the LCR department from the dept_code table?\par
+Does it mean delete all employees that are in department LCR?\par
+Does it mean set to null the dept_code for employees in department LCR?\par
+*/\par
+\par
+SELECT * FROM employee_permission_view;\par
+\par
+SELECT * FROM dept_code;\par
+\par
+SELECT * FROM employee;\par
+\par
+-- let's delete the parent record and set the child to null\par
+-- and update two other columns\par
+CREATE OR REPLACE TRIGGER ioft_emp_perm\par
+INSTEAD OF DELETE\par
+ON employee_permission_view\par
+FOR EACH ROW\par
+BEGIN\par
+  DELETE FROM dept_code\par
+  WHERE dept_code = :OLD.dept_code;\par
+\par
+  UPDATE employee\par
+  SET dept_code = NULL,\par
+      mod_user_id = USER,\par
+      mod_user_date = SYSDATE\par
+  WHERE dept_code = :OLD.dept_code;\par
+\par
+  DELETE FROM test\par
+  WHERE test = 'Z';\par
+END ioft_emp_perm;\par
+/\par
+\par
+SELECT * FROM employee_permission_view;\par
+\par
+DELETE FROM employee_permission_view\par
+WHERE dept_code = 'LCR';\par
+\par
+desc employee\par
+\par
+DELETE FROM employee_permission_view\par
+WHERE dept_code = 'LCR';\par
+\par
+ \par
+ \par
+Instead-Of Trigger with Referencing Clause\par
+\par
+\par
+Referencing Clause with Nested Tables\par
+conn scott/tiger\par
+\par
+CREATE OR REPLACE TYPE emp_type AS OBJECT (\par
+empno    NUMBER(4),\par
+ename    VARCHAR2(10),\par
+job      VARCHAR2(9),\par
+mgr      NUMBER(4),\par
+hiredate DATE,\par
+sal      NUMBER(7, 2),\par
+comm     NUMBER(7, 2));\par
+/\par
+\par
+CREATE OR REPLACE TYPE emp_tab_type AS TABLE OF emp_type;\par
+/\par
+\par
+CREATE OR REPLACE TYPE dept_type AS OBJECT (\par
+deptno NUMBER(2),\par
+dname  VARCHAR2(14),\par
+loc    VARCHAR2(13),\par
+emps   emp_tab_type);\par
+/\par
+\par
+CREATE OR REPLACE VIEW dept_or OF dept_type\par
+WITH OBJECT IDENTIFIER (deptno) AS\par
+SELECT deptno, dname, loc, CAST(MULTISET(\par
+  SELECT empno, ename, job, mgr, hiredate, sal, comm\par
+  FROM emp\par
+  WHERE emp.deptno = dept.deptno) AS emp_tab_type)\par
+FROM dept;\par
+/\par
+\par
+CREATE OR REPLACE TRIGGER dept_emplist_tr\par
+INSTEAD OF UPDATE ON NESTED TABLE emps OF dept_or\par
+REFERENCING NEW AS NEW PARENT AS PARENT\par
+FOR EACH ROW\par
+BEGIN\par
+  dbms_output.put_line('New: ' || :NEW.job);\par
+  dbms_output.put_line('Parent: ' || :PARENT.dname);\par
+END;\par
+/\par
+\par
+set serveroutput on\par
+\par
+UPDATE TABLE (\par
+SELECT p.emps\par
+FROM dept_or p\par
+WHERE deptno = 10)\par
+SET ename = LOWER(ename);\par
+ \par
+\par
+Object-Relational View Instead Of Trigger\par
+\par
+\par
+Object View Instead Of Trigger\tab -- demo table and data: See Object-Relational Views\par
+\par
+INSERT INTO ov_empdept\par
+(empno, ename, dept)\par
+VALUES\par
+(4, 'D. Morgan', t_dept(7, 'MKT', 'Houston'));\par
+\par
+\par
+CREATE OR REPLACE TRIGGER ioft_ov_empdept\par
+INSTEAD OF INSERT\par
+ON ov_empdept\par
+FOR EACH ROW\par
+\par
+BEGIN\par
+  INSERT INTO emp\par
+  (empno, ename, job, mgr, hiredate, \par
+  sal, comm, deptno)\par
+  VALUES\par
+  (:NEW.empno, :NEW.ename, :NEW.job, :NEW.mgr, :NEW.hiredate,\par
+  :NEW.sal, :NEW.comm, :NEW.dept.deptno);\par
+\par
+  INSERT INTO dept\par
+  (deptno, dname, location)\par
+  VALUES\par
+  (:NEW.dept.deptno, :NEW.dept.dname, :NEW.dept.location); \par
+END ioft_ov_empdept;\par
+/\par
+\par
+INSERT INTO ov_empdept\par
+(empno, ename, dept)\par
+VALUES\par
+(4, 'D. Morgan', t_dept(7, 'MKT', 'Houston'));\par
+\par
+COMMIT;\par
+\par
+-- demo corrected with the help of Kent Williamson. Thanks.\par
+ \par
+Related Topics\par
+DDL Triggers\par
+Instead Of Triggers\par
+Object-Relational Views\par
+SYS_CONTEXT Function\par
+System Triggers\par
+Table Triggers\par
+ \par
+Home      :      Code Library      :      Sponsors      :      Privacy      :      Terms of Use      :      Contact Us\tab  [199 users online]    \'a9 2010 psoug.org\par
+\par
+\tab\par
+}
+ 

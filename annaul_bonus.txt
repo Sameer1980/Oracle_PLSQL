@@ -1,0 +1,6 @@
+create or replace function annual_bonus (sal number) return number is
+ann_sal number(10);
+begin
+ select (sal*12) into ann_sal from dual;
+ return ann_sal;
+end;

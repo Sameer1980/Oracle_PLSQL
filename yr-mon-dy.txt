@@ -1,0 +1,25 @@
+create or replace function yr_mon_dy (p_yr_mn_dy varchar2) return varchar2 is
+yr_mn_dy varchar2(45);
+begin
+select
+
+decode(trunc(months_between(to_date(sysdate,'dd-mm-rr'),to_date(p_yr_mn_dy,'dd-mm-rr'))/12),null,
+'0',trunc(months_between(to_date(sysdate,'dd-mm-rr'),to_date(p_yr_mn_dy,'dd-mm-rr'))/12))||' year '||' - '|| -----1st value
+
+decode(trunc(mod(months_between(to_date(sysdate,'dd-mm-rr'),to_date(p_yr_mn_dy,'dd-mm-rr')),12))
+,null,'0',trunc(mod(months_between(to_date(sysdate,'dd-mm-rr'),to_date(p_yr_mn_dy,'dd-mm-rr')),12)))||' months '||' - '|| ----2nd value
+
+decode(trunc(to_date(sysdate,'dd-mm-rr')-
+add_months(to_date(p_yr_mn_dy,'dd-mm-rr'),
+months_between(to_date(sysdate,'dd-mm-rr'),to_date(p_yr_mn_dy,'dd-mm-rr')))),null,
+'0',trunc(to_date(sysdate,'dd-mm-rr')-
+add_months(to_date(p_yr_mn_dy,'dd-mm-rr'),
+months_between(to_date(sysdate,'dd-mm-rr'),to_date(p_yr_mn_dy,'dd-mm-rr')))))||' days '   ---------3rd value
+
+
+into
+yr_mn_dy
+from
+dual;
+return yr_mn_dy;
+end;

@@ -1,0 +1,118 @@
+
+X------------------------------------------------Bulk binding using ref cursor pointing to multiple tables-------------------------------------------------------X
+set serveroutput on
+declare 
+type emp_tab is table of emp%rowtype index by binary_integer;
+emp1 emp_tab;
+type emp_ref is ref cursor;
+ref1 emp_ref;
+begin
+open ref1 for 
+select 
+a.employee_id,
+a.first_name,
+a.last_name,
+a.email,
+a.phone_number,
+a.hire_date,
+a.job_id,
+a.salary,
+a.commission_pct,
+a.manager_id,
+a.department_id,
+b.department_name 
+from employees a,
+departments b
+where a.department_id=b.department_id(+);
+fetch ref1 bulk collect into emp1;
+dbms_output.put_line('No. Of lines selected :'||ref1%rowcount);
+close ref1;
+
+--for i in emp1.first..emp1.last loop
+forall i in emp1.first..emp1.last
+insert into emp
+values(emp1(i).employee_id,emp1(i).first_name,emp1(i).last_name,emp1(i).email,emp1(i).phone_number,emp1(i).hire_date,emp1(i).job_id,emp1(i).salary,emp1(i).commission_pct,emp1(i).manager_id,emp1(i).department_id,emp1(i).dept_name);
+commit;
+--end loop;
+end;
+
+
+
+
+
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------X
+create or replace procedure plsql_table2
+as
+type emp_tab is table of employees%rowtype index by binary_integer;
+emp1 emp_tab;
+cursor emp_cur is select * from employees;
+begin
+open emp_cur;
+fetch emp_cur bulk collect into emp1;
+close emp_cur;
+
+for i in emp1.first .. emp1.last loop
+insert into emp(employee_id,first_name,last_name,email,phone_number,hire_date,job_id,salary)
+values(emp1(i).employee_id,emp1(i).first_name,emp1(i).last_name,emp1(i).email,emp1(i).phone_number,emp1(i).hire_date,emp1(i).job_id,emp1(i).salary);
+--dbms_output.put_line(emp1(i).last_name);
+end loop;
+end;
+---------------------------------------------------------------------------------X
+
+
+
+---------------------------------------------------------------------------------X
+
+
+CREATE OR REPLACE PROCEDURE RAISE_SALARY (PERCENT NUMBER) AS
+TYPE NUMLIST IS TABLE OF NUMBER INDEX BY BINARY_INTEGER ;
+ID NUMLIST;
+BEGIN
+ID(1):=100;
+ID(2):=102;
+ID(3):=104;
+ID(4):=110;
+
+FORALL I IN ID.FIRST..ID.LAST 
+UPDATE EMP
+SET SALARY = (1 + PERCENT/100)*SALARY WHERE MANAGER_ID=ID(I);
+END;
+
+
+CREATE OR REPLACE PROCEDURE RAISE_SALARY(PERCENT NUMBER) AS
+  TYPE DEPT_TAB IS TABLE OF DEPARTMENTS.DEPARTMENT_ID%TYPE INDEX BY BINARY_INTEGER;
+  DEPTID DEPT_TAB;
+I PLS_INTEGER;
+   BEGIN
+  SELECT DEPARTMENT_ID BULK COLLECT INTO DEPTID FROM DEPARTMENTS ;
+  
+  FORALL I IN DEPTID.FIRST.. DEPTID.LAST 
+  UPDATE 
+  EMP
+  SET SALARY = SALARY * (1+PERCENT/100)
+  WHERE DEPARTMENT_ID=DEPTID(I);
+  END ;
+
+
+CREATE OR REPLACE PROCEDURE RAISE_SALARY(PERCENT NUMBER) AS
+TYPE DEPTID_TAB IS TABLE OF DEPARTMENTS.DEPARTMENT_ID%TYPE INDEX BY BINARY_INTEGER;
+DEPTID DEPTID_TAB;
+TYPE EMP_SAL IS TABLE OF EMP.SALARY%TYPE;
+SAL EMP_SAL;
+CURSOR DEPT_CUR IS SELECT DEPARTMENT_ID FROM DEPARTMENTS ;
+BEGIN
+OPEN DEPT_CUR;
+FETCH DEPT_CUR BULK COLLECT INTO DEPTID;
+CLOSE DEPT_CUR;
+FORALL I IN DEPTID.FIRST .. DEPTID.LAST 
+UPDATE
+EMP
+SET SALARY = SALARY * (1 + PERCENT/100)
+WHERE DEPARTMENT_ID=DEPTID(I) RETURNING SALARY BULK COLLECT INTO SAL;
+
+FOR I IN 1 .. SAL.COUNT LOOP
+DBMS_OUTPUT.PUT_LINE(SAL(I));
+END LOOP;
+end;

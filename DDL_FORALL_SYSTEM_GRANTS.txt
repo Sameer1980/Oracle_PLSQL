@@ -1,0 +1,1 @@
+select dbms_metadata.get_granted_ddl ('SYSTEM_GRANT','HR') FROM DUAL

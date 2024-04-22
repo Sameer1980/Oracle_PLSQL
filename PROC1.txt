@@ -1,0 +1,65 @@
+create or replace procedure add_employee
+(
+first_name emp2.first_name%type,
+last_name emp2.last_name%type,
+email emp2.email%type,
+--hire_date emp2.hire_date%type,
+job_id emp2.job_id%type default 'SA_REP',
+sal emp2.salary%type default 1000,
+comm emp2.commission_pct%type default 0,
+mgr emp2.manager_id%type default 145,
+deptid emp2.department_id%type default 30
+) as
+valid_data exception;
+begin
+if valid_deptid(deptid)=true then
+insert into emp2
+(employee_id,
+first_name,
+last_name,
+email,
+hire_date,
+job_id,
+salary,
+commission_pct,
+manager_id,
+department_id
+)
+values
+(employees_seq.nextval,
+first_name,
+last_name,
+email,
+trunc(sysdate),
+job_id,
+sal,
+comm,
+mgr,
+deptid
+);
+commit;
+else raise valid_data;
+end if;
+exception
+when valid_data then
+dbms_output.put_line('Err - 1001 Department not found');
+end;
+
+----------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION VALID_DEPTID (P_DEPTID NUMBER) RETURN BOOLEAN IS
+V_COUNT NUMBER;
+BEGIN
+SELECT COUNT(*) INTO V_COUNT FROM DEPARTMENTS WHERE DEPARTMENT_ID=P_DEPTID;
+
+IF V_COUNT=0 THEN 
+
+RETURN FALSE;
+ELSE
+RETURN TRUE;
+
+END IF;
+END; 
+
+set serveroutput on
+exec add_employee('Joe','Harris','joeharris@mail.com',deptid=>80)
