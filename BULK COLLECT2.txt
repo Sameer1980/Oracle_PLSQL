@@ -1,0 +1,22 @@
+CREATE OR REPLACE PROCEDURE EMP_PROC AS
+TYPE EMP_TAB_DTL_TYPE IS TABLE OF EMPLOYEES%ROWTYPE INDEX BY BINARY_INTEGER;
+EMP EMP_TAB_DTL_TYPE;
+
+BEGIN
+DBMS_OUTPUT.PUT_LINE('                                                                                  EMPLOYEES                                                                                                                                                     ');
+DBMS_OUTPUT.PUT_LINE('-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------');
+DBMS_OUTPUT.PUT_LINE('                                                                                                                                                                                                                                                              ');
+SELECT * BULK COLLECT INTO EMP FROM EMPLOYEES;
+
+FOR I IN 1..EMP.COUNT LOOP
+DBMS_OUTPUT.PUT_LINE('EMPLOYEE ID: '||EMP(I).EMPLOYEE_ID||' - '||EMP(I).FIRST_NAME||' '||EMP(I).LAST_NAME);
+END LOOP;
+END;
+
+
+
+
+
+
+
+

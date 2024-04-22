@@ -1,0 +1,20 @@
+create or replace procedure raise_salary(rate number) as
+type emplist is table of  number;
+type numlist is table of employees.salary%type index by binary_integer;
+emp_ids emplist:=emplist(100,101,102,104);
+new_sals numlist;
+begin
+forall i in emp_ids.first .. emp_ids.last 
+update
+emp
+set salary=salary + (rate * salary)
+where
+employee_id=emp_ids(i)
+returning salary bulk collect into new_sals;
+
+for i in 1 .. new_sals.count loop
+dbms_output.put_line(new_sals(i));
+end loop;
+
+end;
+

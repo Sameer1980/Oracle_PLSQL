@@ -1,7 +1,7 @@
 READ ONLY MATERIALIZED VIEW :------------------- USING REFRESH COMPLETE
 
 CREATE MATERIALIZED VIEW EMP_MAT_VIEW
-TABLESPACE users
+TABLESPACE TSP_PIS
 BUILD IMMEDIATE
 REFRESH COMPLETE oN DEMAND
 ENABLE QUERY REWRITE
@@ -15,7 +15,6 @@ DEPARTMENTS B
 WHERE
 A.DEPARTMENT_ID=B.DEPARTMENT_ID(+)
 GROUP BY B.DEPARTMENT_NAME
-
 
 
 ------------------------------------- USING BUILD DEFERRED -----------------------------------------------------------
@@ -100,5 +99,19 @@ I)EXECUTE DBMS_MVIEW.refresh('EMP_MAT_VU','F');
 II) EXECUTE DBMS_MVIEW.refresh('EMP_MAT_VU','?');
 
 
+---------------------------------------------------------------------------------------------------------
+select * from dict where table_name like '%MVIEW%'
+
+select * from USER_MVIEW_ANALYSIS
+
+SELECT * FROM USER_MVIEWS
 
 
+FROM SYS--------------------------------------------------------------------------------------------------------------------------------------------
+select  master, log, temp_log from sys.mlog$
+
+
+
+Query Rewrite must be enabled at the initialization parameter level (
+
+Alter session set query_rewrite_enabled = TRUE;)
