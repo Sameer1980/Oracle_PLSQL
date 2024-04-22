@@ -1,0 +1,257 @@
+{\rtf1\ansi\ansicpg1252\deff0\deflang1033{\fonttbl{\f0\fnil\fcharset0 Calibri;}}
+{\*\generator Msftedit 5.41.21.2509;}\viewkind4\uc1\pard\sa200\sl276\slmult1\lang9\f0\fs22\par
+Call now: 252-767-6166 \tab  \par
+\par
+ \par
+Search BC Oracle Sites\par
+ Home\par
+ E-mail Us\par
+ Oracle Articles\par
+\par
+\par
+ Oracle Training\par
+ Oracle Tips\par
+ Oracle Forum\par
+ Class Catalog\par
+\par
+\par
+ Remote DBA\par
+ Oracle Tuning\par
+ Emergency 911\par
+ RAC Support\par
+ Apps Support\par
+ Analysis\par
+ Design\par
+ Implementation\par
+ Oracle Support\par
+\par
+\par
+ SQL Tuning\par
+ Security\par
+ Oracle UNIX\par
+ Oracle Linux\par
+ Monitoring\par
+ Remote support\par
+ Remote plans\par
+ Remote services\par
+ Application Server\par
+ Applications\par
+ Oracle Forms\par
+ Oracle Portal\par
+ App Upgrades\par
+ SQL Server\par
+ Oracle Concepts\par
+ Software Support\par
+ Remote Support  \par
+ Development  \par
+ Implementation\par
+\par
+\par
+ Consulting Staff\par
+ Consulting Prices\par
+ Help Wanted!\par
+\par
+ \par
+\par
+\par
+ Oracle Posters\par
+ Oracle Books\par
+ Oracle Scripts\par
+ Ion\par
+ Excel-DB  \par
+\par
+Don Burleson Blog \par
+\par
+\par
+ \par
+\par
+ \par
+\par
+ \par
+\par
+\par
+ \par
+\par
+ \par
+\tab\par
+  \tab\par
+\par
+ \par
+\tab   \tab\par
+Oracle Security Auditing for SYS Connections\par
+\par
+Oracle Security Tips by Burleson Consulting\par
+\par
+\par
+This is an excerpt from the bestselling book "Oracle Privacy Security Auditing", a complete Oracle security reference with working Oracle security scripts.\par
+ \par
+\par
+Auditing for SYS Connections\par
+\par
+This is a thorny issue is Oracle security. When a user with SYSDBA privileges connects to the database, the action is expected to be for administrative reasons only, such as shutdown, startup, add a service to the listener, etc. Generally, we would not expect these actions to be audited and therefore not picked up by the auditing mechanism.\par
+\par
+However, the user who is connected as SYSDBA is a regular user, just like any other user, but with all powerful do anything privileges. This user could potentially alter the data in a table in any schema. Since the action is not audited, the trace of this data manipulation is hidden. In case of an investigation later, the audit trails will have no record of such manipulations ? a huge security hole.\par
+\par
+Sine HIPAA regulations expect accountability for data changes at any level, regardless of who made them, it becomes necessary to audit the actions of such privileged users for any data changes. Unfortunately, in Oracle 8i and below, the actions of a user connected as SYSDBA is not recorded, except the mandatory audit trail in the OS filesystem that merely states that the SYSDBA connection was established, nothing else. The actions conducted by the user after connecting as SYSDBA are not recorded.\par
+\par
+In Oracle 9i and up, the facility is available. All actions by the user connected a SYSDBA, such as changing data, etc., can recorded in the audit trail. This is independent of the setting in the audit_trail parameter. It is done through the initialization parameter audit_sys_operations. By default it is set to FALSE. The following setting in the initialization parameter file will enable SYSDBA auditing:\par
+\par
+audit_sys_operations = TRUE\par
+\par
+This is a static parameter that cannot be set using the ALTER SYSTEM command since the database must be bounced for it to take effect.\par
+\par
+When this is set to TRUE, all actions by the user connected as SYSDBA and SYSOPER are audited in the operating system file. Some very important points must be observed in this regard, and are perhaps better explained through examples.\par
+\par
+Let?s create three users with three different privileges as follows.\par
+\par
+create user sysdba1 identified by sysdba1\par
+/\par
+grant create session, sysdba to sysdba1\par
+/\par
+create user sysoper1 identified by sysoper1\par
+/\par
+grant create session, sysoper to sysoper1\par
+/\par
+create user regulardba1 identified by regulardba1\par
+/\par
+grant create session, dba to regulardba1\par
+/\par
+\par
+Now we will see what actions from these users will trigger auditing and how the information is presented.\par
+\par
+Case 1: User Connecting as SYSDBA\par
+\par
+Let?s test for the user SYSDBA1 connecting as SYSDBA.\par
+\par
+connect sysdba1/sysdba1 as sysdba\par
+select * from claim_schema.claims\par
+/\par
+\par
+Now check the audit records generated. This time, for the sake of diversity, let?s check this in the Windows environment. From the Event Viewer, check the event logs. There should be two entries. If you open those entries, you will notice that one is for SYSDBA connection as shown in Figure 8.2.\par
+\par
+Figure 8.2 Event Log Entry for SYSDBA Connection\par
+\par
+Note the information inside the event log entry.\par
+\par
+Audit trail: ACTION : 'CONNECT' DATABASE USER: 'sysdba1' PRIVILEGE : SYSDBA CLIENT USER: ananda CLIENT TERMINAL: ANANDA1 STATUS: 0.\par
+\par
+It shows that the Windows user ?ananda? connected as the Oracle user ?sysdba1? using the privilege ?SYSDBA?. The connection came from the client terminal ?ANANDA1?.\par
+\par
+The next entry corresponds to the selection from claims. Without reproducing the entire picture, only the lines from the event log are shown here.\par
+\par
+Audit trail: ACTION : 'select * from claim_schema.claims' DATABASE USER: 'sysdba1' PRIVILEGE : SYSDBA CLIENT USER: ananda CLIENT TERMINAL: ANANDA1 STATUS: 0 .\par
+\par
+Note how the exact action performed by the user, i.e. ?select * from claim_schema.claims? is recorded in detail.\par
+\par
+Case 2: User Connecting as SYSOPER\par
+\par
+If the user SYSOPER1 connects as SYSOPER and performs the same actions, the event log will record them also. In UNIX, a file will be created in the OS Audit Log Directory that will show the same information.\par
+\par
+Case 3: User Connecting Normally\par
+\par
+In the third case, we will see the effects of a regular DBA user connecting normally, not as SYSDBA or SYSOPER.\par
+\par
+connect regulardba1/regulardba1\par
+select * from claim_schema.claims\par
+/\par
+\par
+If you check the Event Log or the Audit File Destination Directory, there will be no entries. Why so? The answer is simple ? the sys auditing facility is not for regular users; but for users who will bypass the normal auditing. In the third case, if the auditing is set up, the actions will be caught by the regular audit. Therefore there is no need to catch the same action in the sys audits.\par
+\par
+Case 4: User with SYSDBA Privilege Connecting Normally\par
+\par
+The fourth case is also interesting. The user SYSDBA1 now connects normally and performs the same select query.\par
+\par
+connect sysdba1/sysdba1\par
+select * from claim_schema.claims\par
+/\par
+\par
+The query will fail since the user did not connect as SYSDBA and does not have any other privilege to perform the query. If you examine the audit destination, you will also find that there is no audit record for these actions. The reason is also simple to understand ? the user connected normally, not as SYSDBA, and therefore the action was not audited. In the first case, the user did connect as SYSDBA, triggering the audit. The mere possession of the SYSDBA privilege does not trigger the sys auditing; hence the privilege must be used.\par
+\par
+In Summary\par
+\par
+* Only the users who connected as SYSDBA, SYSOPER are audited.\par
+\par
+* A user who has the SYSDBA privilege, but connects normally, is not audited in this setup. For the auditing to be triggered, the user has to connect as SYSDBA.\par
+\par
+* The user SYS is audited. In Oracle 9i, the user SYS can connect only as SYSDBA; so there is no possibility of user SYS connecting normally.\par
+\par
+* The audit records go to the filesystem (in UNIX) or Event Log (in Windows), not to the database tables, even if the parameter audit_trail is set to DB. The location in UNIX is the filesystem specified by the initialization parameter audit_file_dest, which defaults to $ORACLE_HOME/rdbms/audit.\par
+\par
+* This parameter is independent of the other audit parameter audit_trail. The SYSDBA auditing can be enabled or disabled regardless of whether regular auditing is set.\par
+\par
+The Use of SYS Auditing\par
+\par
+Since the SYS user is audited and the audit record goes into a filesystem area, not the database object like a table, the security is more pronounced. If this filesystem area is somehow protected so that the regular DBA user does not have read or write access to it, only the auditors or other security personnel have access. The information can be considered more secure than the regular database auditing, which can be tampered with by anyone with a DBA role. In Windows NT, the event log is generally not available to the regular user and therefore the trail is protected.\par
+\par
+Since auditing SYS user actions must be accounted for, it is recommended that this auditing be enabled. The logs (in UNIX) and Event Log (in Windows) should be periodically archived to an offline medium and purged from the system.\par
+\par
+ \par
+\tab This is an excerpt from the book "Oracle Privacy Security Auditing".\par
+\par
+You can buy it direct from the publisher for 30%-off and get instant access to the code depot of Oracle security and auditing scripts.\par
+\par
+ \par
+\tab   \tab\par
+  \par
+Oracle Tips\par
+Got Questions?\par
+Learn Oracle at Sea!\par
+BEWARE of 11gR2 Upgrade Gotchas!\par
+Free AWR Report Analysis\par
+Forbes rates DBA as the best job\par
+ \par
+ \par
+ \par
+ \par
+\par
+ \par
+ \par
+ \par
+\par
+ \par
+Oracle performance tuning software \par
+ \par
+\par
+ \par
+\par
+Burleson is the American Team\par
+\par
+Note: This Oracle documentation was created as a support and Oracle training reference for use by our DBA performance tuning consulting professionals.  Feel free to ask questions on our Oracle forum.\par
+\par
+Verify experience! Anyone considering using the services of an Oracle support expert should independently investigate their credentials and experience, and not rely on advertisements and self-proclaimed expertise. All legitimate Oracle experts publish their Oracle qualifications.\par
+\par
+Errata?  Oracle technology is changing and we strive to update our BC Oracle support information.  If you find an error or have a suggestion for improving our content, we would appreciate your feedback.  Just  e-mail:  and include the URL for the page.\par
+\par
+\par
+                    \par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+\tab\par
+\par
+\par
+Burleson Consulting\par
+\par
+The Oracle of Database Support\par
+\par
+Oracle Performance Tuning\par
+\par
+Remote DBA Services\par
+\par
+\par
+ \par
+\par
+Copyright ? 1996 -  2014\par
+\par
+All rights reserved by Burleson\par
+\par
+Oracle ? is the registered trademark of Oracle Corporation.\par
+\par
+\par
+}
+ 
