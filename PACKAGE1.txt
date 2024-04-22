@@ -1,0 +1,92 @@
+create or replace PACKAGE BODY EMP_PKG
+AS
+function valid_deptid(p_deptid emp2.department_id%type)
+return boolean
+as
+v_count number;
+begin
+select count(*) into v_count from departments where department_id=p_deptid;
+if v_count=0 then
+return false;
+else
+return true;
+end if;
+end valid_deptid;
+
+
+
+procedure get_employee(p_empid in varchar2,p_sal out number,p_jobid out varchar2)as
+begin
+select salary,job_id into p_sal,p_jobid from employees where to_char(employee_id)=p_empid;
+end get_employee;
+
+procedure add_employee
+(
+first_name emp2.first_name%type,
+last_name emp2.last_name%type,
+email emp2.email%type,
+job emp2.job_id%type default 'SA_REP',
+mgr emp2.manager_id%type default 145,
+sal emp2.salary%type default 1000,
+comm emp2.commission_pct%type default 0,
+deptid emp2.department_id%type default 30
+)
+as
+data_not_found exception;
+begin
+if valid_deptid(deptid)=true then
+insert into emp2
+values
+(
+employees_seq.nextval,
+first_name,
+last_name,
+email,
+null,
+trunc(sysdate),
+job,
+sal,
+comm,
+mgr,
+deptid
+);
+commit;
+else
+raise data_not_found;
+end if;
+exception
+when data_not_found then
+dbms_output.put_line('Err:-1001,Data not found..');
+rollback;
+end add_employee;
+
+--TYPE EMPTAB IS TABLE OF EMP2%ROWTYPE INDEX BY BINARY_INTEGER;
+--EMP_TABLE EMPTAB;
+
+PROCEDURE GET_EMPLOYEES(DEPT_ID EMPLOYEES.DEPARTMENT_ID%TYPE) AS
+BEGIN
+SELECT * BULK COLLECT INTO EMP_TABLE FROM EMP2 WHERE DEPARTMENT_ID=DEPT_ID;
+END GET_EMPLOYEES;
+
+PROCEDURE SHOW_EMPLOYEES AS
+BEGIN
+FOR I IN 1..EMP_TABLE.COUNT LOOP
+DBMS_OUTPUT.PUT_LINE(EMP_TABLE(I).EMPLOYEE_ID||' - '||EMP_TABLE(I).FIRST_NAME||' '||EMP_TABLE(I).LAST_NAME);
+END LOOP;
+END SHOW_EMPLOYEES;
+
+end EMP_PKG;
+
+
+CREATE TABLE LOG_NEWEMP
+(
+EMPID NUMBER(4),
+F_NAME VARCHAR2(25),
+L_NAME VARCHAR2(30)
+)
+
+CREATE SEQUENCE LOG_NEWEMP_SEQ
+START WITH 1 INCREMENT BY 1  NOCYCLE NOCACHE
+
+
+

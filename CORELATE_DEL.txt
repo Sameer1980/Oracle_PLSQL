@@ -1,0 +1,1 @@
+delete from emp a where employee_id in(select employee_id from job_history where employee_id=a.employee_id)

@@ -1,0 +1,764 @@
+Skip HeadersOracle® Universal Installer and OPatch User's Guide
+10g Release 2 (10.2) for Windows and UNIX
+B16227-12 
+Home 
+Book List 
+Contents 
+Index 
+Master Index 
+Contact Us 
+ 
+
+--------------------------------------------------------------------------------
+
+Previous 
+Next 
+ PDF · Mobi · ePub 
+2 Managing Oracle HomesThis chapter contains the following sections:
+
+•Introduction to Oracle Homes
+
+•Installing the Oracle Product
+
+•Removing Oracle Homes
+
+•Determining the Default Oracle Home
+
+•Multiple Oracle Homes
+
+•About the Oracle Universal Installer Inventory
+
+•Home Selector (Available on Win32 Platforms)
+
+Introduction to Oracle HomesThe Oracle Universal Installer supports the installation of several active Oracle homes on the same host. An Oracle home is a directory into which all Oracle software is installed. This is pointed by an environment variable. The home consists of the following:
+
+•The directory location where the products are installed.
+
+•The corresponding system path setup.
+
+•The program groups associated with the products installed in the home (where applicable).
+
+•The services running from the home.
+
+Installing the Oracle Product
+When you install an Oracle product, an Oracle home is created.
+
+To install the product and create the Oracle home, perform the following steps:
+
+1.Run Oracle Universal Installer.
+
+2.In the Specify Home Details page enter the Oracle home settings for the installation session. See Table 2-1 for a description of the fields in this section of the screen.
+
+3.Continue with your installation. Refer to Chapter 4, "Installing Products Using Oracle Universal Installer" for detailed information.
+
+Table 2-1 Oracle Installation Settings for Specify Home Details page
+
+Settings Functions 
+Name
+ Enter a name for the Oracle home. This name identifies the program group associated with a particular home and the Oracle services installed on this home. The Oracle home name must be between 1 to 127 characters long and can include only alphanumeric characters and underscores.
+ 
+Path
+ Enter the full path to an Oracle home or select an Oracle home from the drop-down list of existing Oracle homes. The Oracle home location is the directory where products are installed.
+
+Data files may or may not be installed within an Oracle home. You may use the Browse button to choose a directory to install your product.
+
+For Windows platforms, you must give a valid path that is not in the Windows directory. Different homes cannot share the same location.
+ 
+
+
+Note:
+
+Oracle recommends that you designate an Oracle home location that is an empty or non-existing directory. If you select a directory for the Oracle home location that is not empty or already exists, you will be warned and asked if you wish to proceed. 
+For silent installations, if a non-empty, existing directory is specified, an error is logged in the console and in the installActions<timestamp>.log file. Also, the Oracle Universal Installer aborts. To override this condition, use the -force flag on the command line. The effect of using the -force flag will be the same as selecting Yes while installing in GUI mode. You will receive a warning message, but the installation will continue.
+
+Removing Oracle HomesTo remove an existing Oracle home, invoke Oracle Universal Installer and click Deinstall Products. At the inventory dialog, select the homes you wish to delete and click Remove. You may also use the REMOVE_HOMES variable in the command line or in a response file. The syntax is as follows:
+
+./runInstaller -deinstall ORACLE_HOME=<LOCATION_OF_ORACLE_HOME> "REMOVE_
+HOMES={<LOCATION_OF_ORACLE_HOME_TO_BE_REMOVED>}" -silent
+Determining the Default Oracle HomeBy default, when you start Oracle Universal Installer, the software searches your system to determine the default Oracle home where Oracle software should be installed.
+
+In all cases, the ORACLE_HOME name is taken first from the command line if it is specified, else from the response file, if specified. If not, then the following convention is used for the name:
+
+Ora<short_marketing_name_in_oraparam.ini>_<home_identifier>
+Where <short_marketing_name_in oraparam.ini> is the short product marketing name as specified in the oraparam.ini file, for example, "Db10g", and <home_identifier> is a counter derived from the Central Inventory. For example, the ORACLE_HOME name could be OraDb10g_2.
+
+The ORACLE_HOME path is taken first from the command line if it is specified, else from the response file, if specified. If not, then the ORACLE_HOME environment variable is used. If neither is specified, the following conventions are used for the path:
+
+•If ORACLE_BASE has not been specified in the environment:
+
+$HOME/product/<version>/<short_name>_<counter>
+Where <short_name> is the short product name, for example, "Db", and <counter> is picked up based on the existence of the files. For example, the ORACLE_HOME path could be $HOME/product/10.2.0/Db_1
+
+•If ORACLE_BASE has been specified in the environment:
+
+$ORACLE_BASE/product/<version>/<short_name>_<counter>
+For example: $ORACLE_BASE/product/10.2.0/Db_1.
+
+The instance-related directory location is accepted first from the response file, if specified. If not, the oradata, flash_recovery_area, admin, and doc directories are created under ORACLE_BASE. If ORACLE_BASE has not been specified, the default is the $ORACLE_HOME/oradata directory. If the parent directory of the Oracle home is writable, then these directories would be created in the parent directory of the Oracle home.
+
+Multiple Oracle HomesOracle Universal Installer supports the installation of several active Oracle homes on the same host as long as the products support this at run-time. You can have multiple versions of the same product or different products running from different Oracle homes concurrently. Products installed in one home will not conflict or interact with products installed on another home. You can update software in any home at any time, assuming all Oracle applications, services, and processes installed on the target home are shut down. Processes from other homes may still be running.
+
+Target Home
+The Oracle home currently accessed by Oracle Universal Installer for installation or de-installation is the target home. In order to upgrade or remove products from the target homes, those products must be shut down or stopped.
+
+About the Oracle Universal Installer InventoryThe Oracle Universal Installer inventory stores information about all Oracle software products installed in all Oracle homes on a host, provided the product was installed using Oracle Universal Installer.
+
+Inventory information is stored in Extensible Markup Language (XML) format. The XML format allows for easier diagnosis of problems and faster loading of data. Any secure information is not stored directly in the inventory. As a result, during removal of some products, you may be prompted to enter the required credentials for validation.
+
+Structure of the Oracle Universal Installer Inventory
+The Oracle Universal Installer inventory is hierarchical in structure consisting of the following:
+
+•Central Inventory Pointer File
+
+•Central Inventory
+
+•Oracle Home Inventory
+
+Central Inventory Pointer File
+Every Oracle software installation has an associated Central Inventory where the details of all the Oracle products installed on a host are registered. The Central Inventory is located in the directory specified by the inventory pointer file. Each Oracle software installation will have its own Central Inventory pointer file which is unknown to another Oracle software installation.
+
+In case of Oracle homes sharing the same Central Inventory, all read and write operations on the inventory is performed by the Oracle Universal Installer components. The operations on the Central Inventory are performed through a locking mechanism. This implies that when an operation like installation, upgrade, or patching happens on an Oracle home, these operations will get blocked on other Oracle homes that share the same Central Inventory.
+
+You will find the inventory pointer file in the following location:
+
+For Solaris: /var/opt/oracle/oraInst.loc
+For Linux: /etc/oraInst.loc
+For Windows this pointer is located in the registry key: \\HKEY_LOCAL_
+MACHINE\\Software\Oracle\inst_loc.
+A sample of oraInst.loc file is listed:
+
+inventory_loc=/home/oracle_db10g/product/10.2.0/db_1inst_group=oracle
+In UNIX, if you do not want to use the Central Inventory located in the directory specified by the inventory pointer file, you can use the -invPtrLoc flag to specify another inventory pointer file. The syntax is as follows:
+
+./runInstaller -silent -invPtrLoc <Location_of_oraInst.loc> ORACLE_
+HOME="<Location_of_Oracle_Home>" ORACLE_HOME_NAME="<Name_of_Oracle_Home>"
+Note:
+
+If the contents of the oraInst.loc file is empty, Oracle Universal Installer prompts you to create a new inventory.
+Central Inventory
+Central Inventory contains the information relating to all Oracle products installed on a host. It contains the following files and folders:
+
+•Inventory File
+
+•Logs Directory
+
+Inventory File
+This file lists all the Oracle homes installed on the node. For each Oracle home, it also lists the Oracle home name, the home index, and the nodes on which the home is installed. It also mentions if the home is an Oracle Clusterware home or a removed Oracle home. It can only detect removed Oracle homes created using Oracle Universal Installer version 10.1 and higher. This file is present in the following location:
+
+<central inventory location>/ContentsXML/inventory.xml
+A sample of inventory.xml file is listed:
+
+<?xml version="1.0" standalone="yes" ?>
+<!-- Copyright (c) 2005 Oracle Corporation. All rights Reserved -->
+<!-- Do not modify the contents of this file by hand. -->
+<INVENTORY>
+<VERSION_INFO>
+   <SAVED_WITH>10.2.0.0.0</SAVED_WITH>
+   <MINIMUM_VER>2.1.0.6.0</MINIMUM_VER>
+</VERSION_INFO>
+<HOME_LIST>
+<HOME NAME="OraDb10g_home1" LOC="/home/oracle_db10g/product/10.2.0/db_1" TYPE="O" IDX="1"/>
+<HOME NAME="OUIHome" LOC="D:\OraHome1" TYPE="O" IDX="1" /> 
+<HOME NAME="OUIHome12" LOC="D:\OraHome12" TYPE="O" IDX="3" /> 
+<HOME NAME="OUIHome1" LOC="D:\homes\OraHome1" TYPE="O" IDX="4" /> 
+<HOME NAME="OUIHome11" LOC="d:\homes\oui11" TYPE="O" IDX="2" REMOVED="T" /> 
+</HOME_LIST>
+</INVENTORY>
+Note:
+
+Oracle recommends that you do not remove or manually edit this file as it could affect installation and patching.
+Logs Directory
+The Central Inventory contains installation logs in the following location:
+
+<central inventory location>/logs
+The logs directory contains the logs corresponding to all installations carried out on that node. You will also find a copy of the installation log in the $ORACLE_HOME/cfgtoollogs directory.The installation logs for an installation are identified by the timestamp associated with the log files. These files are generally saved in the following format:
+
+<Name_of_Action><YYYY-MM-DD_HH-MM-SS{AM/PM}>.log
+For example consider an attachHome operation performed on 17th, May, 2005 at 6.45AM. The log file for the same would be created as follows:
+
+AttachHome2005-05-17_06-45-00AM.log
+Note:
+
+The installation logs do not contain any errors or failures.
+Oracle Home Inventory
+Oracle home inventory or local inventory is present inside each Oracle home. It contains information relevant to the particular Oracle home only. This file is located in the following location:
+
+$ORACLE_HOME/inventory
+
+
+It contains the following files and folders:
+
+•Components File
+
+•Home Properties File
+
+•Other Folders
+
+Components File
+This file contains the details about third party applications like Java Runtime Environment (JRE) required by different Java-based Oracle tools and components. In addition, it also contains details of all the components as well as patchsets or interim patches installed in the Oracle home. This file is located in the following location:
+
+ORACLE_HOME/inventory/ContentsXML/comps.xml
+For a sample of the components file refer to section "Sample Components File".
+
+Home Properties File
+This file contains the details about the node list, the local node name, and the CRS flag for the Oracle home. In a shared home, the local node information is not present. This file also contains the following information:
+
+•GUID: This is the unique global ID for the Oracle home.
+
+•ARU ID: This is the unique platform ID. The patching and patchset application depends on this ID.
+
+•ARU ID DESCRIPTION: This is the platform description.
+
+The information in oraclehomeproperties.xml overrides the information in inventory.xml. This file is located in the following location:
+
+$ORACLE_HOME/inventory/ContentsXML/oraclehomeproperties.xml
+A sample of the home property file is listed:
+
+<GUID>893051798#.356758136</GUID>
+   <HOME CRS="T"/>
+   <ARU_PLATFORM_INFO>
+      <ARU_ID>46</ARU_ID>
+      <ARU_ID_DESCRIPTION>Linux x86</ARU_ID_DESCRIPTION>
+   </ARU_PLATFORM_INFO>
+   <CLUSTER_INFO>
+      <LOCAL_NODE NAME="stacg30"/>
+    <NODE_LIST><NODE NAME="stacg34"/><NODE
+NAME="stacg30"/></NODE_LIST></CLUSTER_INFO>
+The ARU_IDs for some platforms are listed in the following table:
+
+Table 2-2 ARU_IDs for Platforms
+
+Platform ARU_ID 
+HPUX 64 bit
+ 59
+ 
+IBM 5L
+ 212
+ 
+Linux 32 bit
+ 46
+ 
+Solaris 32 bit
+ 453
+ 
+Solaris 64 bit
+ 23
+ 
+Windows XP
+ 912
+ 
+
+
+Other Folders
+The following table lists the other folders you will find in the Oracle home inventory:
+
+Table 2-3 Other Folders in Oracle Home Inventory
+
+Folder Name Description 
+Scripts
+ This folder contains the scripts that would be used for the cloning operation.
+ 
+ContentsXML
+ This folder contains the details of the components and libraries installed.
+ 
+Templates
+ This folder contains the template files used for cloning.
+ 
+oneoffs
+ This folder contains the details of the one-off patches applied.
+ 
+
+
+Creating the Central Inventory
+Oracle Universal Installer enables you to set up the Central Inventory on a clean host or register an existing Oracle home with the Central Inventory, when it is lost or corrupted. You can set up the Central Inventory by using the -attachHome flag of Oracle Universal Installer. The syntax is as follows:
+
+./runInstaller -silent -attachHome -invPtrLoc ./oraInst.loc 
+ORACLE_HOME="<Oracle_Home_Location>" ORACLE_HOME_NAME="<Oracle_Home_Name>"
+"CLUSTER_NODES={<node1,node2>}" LOCAL_NODE="<node_name>"
+You can use the session variables ORACLE_HOME, ORACLE_HOME_NAME, CLUSTER_NODES, REMOTE_NODES, and LOCAL_NODE.
+
+In a cluster installation, if you don't pass the CLUSTER_NODES session variable, Oracle Universal Installer takes it from the $ORACLE_HOME/inventory/ContentsXML/oraclehomeproperties.xml file.
+
+In a cluster installation, if you don't pass the LOCAL_NODE session variable, Oracle Universal Installer, takes it from the $ORACLE_HOME/inventory /ContentsXML/oraclehomeproperties.xml file. If it does not find an entry there, it takes it from the Oracle Clusterware stack. If it is not able to find it in the stack also, then the first node of the CLUSTER_NODES is taken as the LOCAL_NODE.
+
+You may pass the REMOTE_NODES variable if you want to specify the list of remote nodes. If you want to set up the Central Inventory in the local node, you need to pass the -local flag and the REMOTE_NODES variable empty. The syntax is as follows:
+
+./runInstaller -silent -attachHome -invPtrLoc ./oraInst.loc 
+ORACLE_HOME="<Oracle_Home_Location>" ORACLE_HOME_NAME="<Oracle_Home_Name>"
+"REMOTE_NODES={}" -local
+Note:
+
+When you use the -local flag, it performs the action on the local node irrespective of the cluster nodes specified.
+For a non-Real Application Clusters setup, you need not pass the LOCAL_NODE variable, and the CLUSTER_NODES variable is empty. The syntax is as follows:
+
+./runInstaller -silent -attachHome -invPtrLoc ./oraInst.loc 
+ORACLE_HOME="<Oracle_Home_Location>" ORACLE_HOME_NAME="<Oracle_Home_Name>"
+"CLUSTER_NODES={}"
+You can use the -local flag to attach the local Oracle home. If you are using a shared Oracle home with -local flag, use -cfs flag. This ensures that the local node information is not populated inside a shared Oracle home.
+
+If the Central Inventory does not already exist, Oracle Universal Installer creates the Central Inventory in the location specified by the oraInst.loc file.
+
+After attaching the Oracle home, you can verify the success of the operation by verifying the contents of the log file present in the <central_inventory>/logs directory. You can also view the contents of the inventory.xml file under <central-inventory>/ContentsXML directory to verify if the Oracle home is registered.
+
+Note:
+
+Oracle recommends cloning on Windows operating systems to create the Central Inventory.
+Detaching Oracle Homes from the Central Inventory
+You can detach an Oracle home from the Central Inventory. When you pass this flag, it updates the oraclehomeproperties.xml present in the Oracle home. The syntax is as follows:
+
+./runInstaller -silent -detachHome -invPtrLoc ./oraInst.loc 
+ORACLE_HOME="<Oracle_Home_Location>" ORACLE_HOME_NAME="<Oracle_Home_Name>"
+You can use the -local flag to detach the Oracle home from the inventory of the local node. If you are using a shared Oracle home, use -cfs flag. This ensures that the local node information is not populated inside a shared Oracle home.
+
+./runInstaller -silent -local -cfs -detachHome -invPtrLoc ./oraInst.loc 
+ORACLE_HOME="<Oracle_Home_Location>" ORACLE_HOME_NAME="<Oracle_Home_Name>"
+
+./runInstaller -silent -detachHome -invPtrLoc ./oraInst.loc 
+ORACLE_HOME="<Oracle_Home_Location>" ORACLE_HOME_NAME="<Oracle_Home_Name>"
+You can completely clean the Oracle home and remove the home directory by using the -removeallfiles flag. The syntax is as follows:
+
+./runInstaller -silent -deinstall -removeallfiles -invPtrLoc ./oraInst.loc 
+ORACLE_HOME="<Oracle_Home_Location>" ORACLE_HOME_NAME="<Oracle_Home_Name>"
+If you want to disable the warning message that appears when you use the -removeallfiles flag, use the -nowarningonremovefiles flag. The syntax is as follows:
+
+./runInstaller -silent -deinstall -nowarningonremovefiles -invPtrLoc ./oraInst.loc 
+ORACLE_HOME="<Oracle_Home_Location>" ORACLE_HOME_NAME="<Oracle_Home_Name>"
+Removing the Central Inventory
+Even after all the Oracle homes on a host are removed, you will find traces of the inventory with certain log files. If you do not want to maintain these files and would like to remove the Central Inventory, perform the following:
+
+Removing the Central Inventory on UNIX Platforms
+You can remove the Central Inventory on UNIX by performing the following steps:
+
+1.Locate the oraInst.loc file and get the Central Inventory location (inventory_loc parameter) from this file.
+
+For Solaris this file is located in /va/opt/oracle folder.
+
+For Linux this file is located in /etc folder.
+
+2.Remove the Central Inventory by executing the following command:
+
+rm -rf <central_inventory_location>
+3.Remove oraInst.loc file by executing the following command with root privileges:
+
+For Solaris
+
+rm /va/opt/oracle/oraInst.loc
+For Linux
+
+rm /etc/oraInst.loc
+Removing the Central Inventory on Windows Platforms
+You can remove the Central Inventory on Windows by performing the following steps:
+
+1.Locate the registry key \\HKEY_LOCAL_MACHINE\Software\Oracle\inst_loc and get the Central Inventory location from this key.
+
+2.Delete the Central Inventory directory and all its contents.
+
+3.Delete the registry key \\HKEY_LOCAL_MACHINE\Software\Oracle\inst_loc.
+
+Consolidating Multiple Central Inventories
+The following procedure explains how to consolidate multiple central inventories into a single central inventory. For CRS and RAC homes, perform this procedure for each node.
+
+1.Identify the central inventory to use and ensure that it is the same path on all nodes of the cluster.
+
+2.Go to this central inventory directory and run orainstRoot.sh to ensure that the oraInst.loc file points to this inventory.
+
+3.Identify the other central inventories on the system, then identify the Oracle homes for each central inventory.
+
+4.Do the following for each Oracle home:
+
+a.Enter cd $ORACLE_HOME/oui/bin.
+
+b.Run ./attachhome.sh -silent -local "CLUSTER_NODES={<List of nodes>}" LOCAL_NODE=<nodename>
+
+For single instance homes, run ./attachhome.sh -silent.
+
+c.Verify the inventory updates by going to the ORACLE_HOME/OPatch directory and running OPatch lsinventory -detail.
+
+d.Verify that the overall inventory is being updated by running ./runInstaller and clicking on 'Installed Products...' to bring up the contents of the central inventory. Ensure that the inventory shows the new home and the nodes.
+
+Reconstructing a Shared Central Inventory on a Non-shared Location
+The following sections provide advisory information about shared Central Inventories, explain the enforced shared inventory check, and provide a procedure for reconstructing the Central Inventory.
+
+Oracle Recommendation Regarding Central Inventory Placment
+The Oracle Central Inventory is a repository for all Oracle products (software) installed on a system. Since the Central Inventory consists of system-specific information, it is required that the Central Inventory be saved on a local non-shared directory on the system. While software can be shared across nodes, the inventory should be local to each system.
+
+If the Central Inventory is shared across system (nodes), this would reflect the installation information for a group of systems collectively. Such a configuration also mandates that all Oracle homes registered in the inventory are also shared. However, a shared inventory is contrary to Central Inventory design principles.
+
+Consequently, Oracle recommends placing the Central Inventory on a local file system not shared by other systems, because the Central Inventory is a system-specific inventory of the installations on this system. Shared inventories are strongly discouraged.
+
+Enforced Shared Inventory Check
+Since a shared inventory is a recommended practice, OUI displays a warning if you attempt to specify a shared inventory location under the following circumstances:
+
+•Grid Control upgrades from 10.1.x or 10.2.x to 10.2.0.4 or later
+
+•10.2.0.4 or later Grid Control patchset applications and 11g Grid Control installations
+
+Exceptions are as follows:
+
+•Shared storage prior to 10.2.0.4 —
+
+If you have already set up your inventory on shared storage prior to Grid Control version 10.2.0.4, you can use the steps in "Procedure to Reconstruct the Central Inventory" below to reconstruct the central inventory on a non-shared location.
+
+If you do not want to reconstruct the central inventory on a non-shared location, you can pass the flag '-ignoreSharedInventory' to suppress the shared inventory error when invoking runInstaller.
+
+•HPTru64 Cases —
+
+Tru64 is a special operating system where all storage is shared storage (including the operating system installed on shared storage). Therefore, a shared inventory is permissible.
+
+Procedure to Reconstruct the Central Inventory
+Perform the following steps as a Grid Control installation user, which is the user who owns the inventory.
+
+1.Identify a non-shared location for the Central Inventory. This location should have sufficient permissions, such as read and write permissions. Make sure that the installation user creates this new location and that the location is part of the installation group.
+
+2.Obtain the list of Oracle homes from the existing shared Central Inventory registered in oraInventory, use the command opatch lsinventory -all.
+
+Since this is a shared inventory, you may see Oracle homes listed in the Central Inventory from other systems on which the inventory is shared. Identify the Oracle home pertinent to the current system.
+
+3.Edit the default inventory pointer file indicating the location of the non-shared inventory:
+
+inventory_loc=<location of non-shared inventory location>
+inst_group=<inventory group>
+The default inventory pointer file resides in this file:
+
+/etc/oraInst.loc
+All other Unix operating systems, such as Solaris and so forth reside in this file:
+
+/var/opt/oracle/oraInst.loc
+4.For each Oracle home in the existing shared inventory, do the following:
+
+a.Detach the home from the existing inventory.
+
+¦For a non-RAC home, run:
+
+$ORACLE_HOME/oui/bin/detachhome.sh
+¦For a Clusterware, RAC, or clustered Agent home, run the following command on each of the nodes:
+
+$ORACLE_HOME/oui/bin/detachhome.sh -local
+b.Attach a home to the new non-shared inventory.
+
+¦For a non-RAC home, run:
+
+$ORACLE_HOME/oui/bin/attachhome.sh
+¦For a non-shared Clusterware home, run the following command on each of the nodes:
+
+$ORACLE_HOME/oui/bin/attachhome.sh -local "CLUSTER_NODES= {comma-separated nodelist}" LOCAL_NODE=<node on which command is run> CRS=true 
+¦For a shared Clusterware home, run the following command on each of the nodes:
+
+$ORACLE_HOME/oui/bin/attachhome.sh -local "CLUSTER_NODES= {comma-separated nodelist}" LOCAL_NODE=<node on which command is run> CRS=true -cfs
+¦For a non-shared RAC or clustered Agent home, run the following command on each of the nodes:
+
+$ORACLE_HOME/oui/bin/attachhome.sh -local "CLUSTER_NODES= {comma-separated nodelist}" LOCAL_NODE=<node on which command is run>
+¦For a shared RAC or clustered Agent home, run the following command on each of the nodes:
+
+$ORACLE_HOME/oui/bin/attachhome.sh -local "CLUSTER_NODES={comma separated nodelist}" LOCAL_NODE=<node on which command is run> -cfs
+Note:
+
+The old inventory becomes obsolete after this migration. You can delete the directory, but this is not mandatory.
+Upgrading and Patching the Oracle Home
+You can apply patchsets and upgrade an existing Oracle home. You can apply patchsets using Oracle Universal Installer. For more information on upgrading or applying patchsets for an Oracle product, refer to the respective Oracle product installation guide of the product that you wish to upgrade.
+
+Cloning Oracle Homes
+You can clone an Oracle home using Oracle Universal Installer. For more information on cloning, refer to Chapter 6, "Oracle Software Cloning Using Oracle Universal Installer".
+
+Backing up the Inventory
+You can backup the Oracle home using your preferred method. You can use any method such as zip, tar, and cpio to compress the Oracle home.
+
+It is highly recommended to backup the Oracle home before any upgrade or patch operation. You should also backup the Central Inventory when Oracle home is installed or de-installed.
+
+Example:
+
+Consider the scenario where you have a Database Oracle Home called DBHome that is registered with the default Central Inventory in the /product directory. You want to patch this database but decide to back up the database before patching.
+
+The command to backup the database is:
+
+cd /product/DBHome
+tar cf - * | gzip > /product/archive/DBHome.tar.gz
+If you are using a Win32 system, you could use WinZip to zip up the Oracle Home. Do not use the jar command to zip the Oracle Home, as this causes the file permissions to be lost.
+
+Next, let's say that you apply the patch and something goes terribly wrong. You decide to delete the Oracle Home from the Central Inventory and restore the original Oracle Home. To delete the Oracle Home from the Central Inventory, use the following command:
+
+./runInstaller -silent -detachHome ORACLE_HOME="/product/DBHome"
+ORACLE_HOME_NAME="DBHome"
+On Win32 systems, the command would be:
+
+setup.exe -silent -detachHome ORACLE_HOME="C:\product\DBHome"
+ORACLE_HOME_NAME="DBHome"
+Next, delete the Oracle Home:
+
+cd /product
+rm -rf /product/DBHome
+Next, you need to restore the original Oracle Home and update the Central Inventory. Restore the Oracle Home to its original location using the following commands:
+
+mkdir -p /product/DBHome
+gunzip  <  /product/archive/DBHome.tar.gz | tar xf -
+Finally, you need to attach this Oracle Home to the Central Inventory:
+
+./runInstaller -silent -attachHome ORACLE_HOME="/product/DBHome"
+ORACLE_HOME_NAME="DBHome"
+On Win32 systems, the command would be:
+
+setup.exe -silent -attachHome ORACLE_HOME="C:\product\DBHome"
+ORACLE_HOME_NAME="DBHome"
+Recovering from Inventory Corruption
+The inventory (Central and the Oracle home inventory) is a critical part in the Oracle software life cycle management. The following section explains about what you need to do in case of inventory corruption.
+
+Diagnosing and Recovering from Central Inventory Corruption
+When you execute an opatch lsinventory -detail or when you click Installed Products, the Oracle home does not appear.
+
+Cause: The Oracle home may be missing from the Central Inventory or the Central Inventory could be missing or corrupted.
+
+Action: Perform the following:
+
+•If the Oracle home is missing from the Central Inventory, perform an attach home operation on the missing Oracle home. The Central Inventory will be restored.
+
+•If the Central Inventory is missing or corrupted, restore the Central Inventory. If you have not backed up the Central Inventory, perform an attach home operation.
+
+For more information on the attach home operation, refer to the section "Creating the Central Inventory".
+
+If there are multiple entries in the inventory.xml file for a given Oracle Home, then Inventory Collection from the Grid Control perspective would have issues. In this event, you should remove these duplicate entries manually.
+
+Here are some examples of the kind of incorrect entries that could be there:
+
+<HOME NAME="db10g" LOC="/product/db10g" TYPE="O" IDX="1"/>
+<HOME NAME="oms10g" LOC="/product/em/oms10g" TYPE="O" IDX="2"/>
+<HOME NAME="db10g" LOC="/product/db10g" TYPE="O" IDX="3"/>
+In the above example the first and third entries are duplicates. The Oracle Home Name and Oracle Home Location are identical. In this example, remove the third line.
+
+Note that all duplicate inventory issues have been caused by manual updates to the inventory.xml file. Use the OUI APIs to make changes to the inventory.
+
+Diagnosing and Recovering from Oracle Home Inventory Corruption
+When you execute an opatch lsinventory -detail or when you click Installed Products, the Oracle home appears, but the products and components within the Oracle home are not listed.
+
+Cause: This may be due to missing or corrupted Oracle home inventory.
+
+Action: If the Oracle home inventory is missing or corrupted, restore the Oracle home inventory. If you have not backed up the Oracle home inventory, you may have to install the software on a different node having the same platform and install the same patch levels including interim patches. After that, you can simply copy the inventory directory from the patched Oracle home to the location of the affected Oracle home.
+
+Note:
+
+For Oracle Universal Installer version 10.2.0.2.0 and above, you will have the following scripts in Oracle home to recover from Oracle home inventory corruption: 
+•detachHome.bat / detachHome.sh: Use this script if the Oracle home is corrupted or needs to be updated.
+
+•attachHome.bat / attachHome.sh: Use this script if the Oracle home needs to be added to the inventory.
+
+For information on recovering from RAC Oracle home inventory corruption, see "Diagnosing and Recovering from RAC Oracle Home Inventory Corruption".
+
+Real Application Clusters
+In a Real Application Clusters environment, the inventory also contains a list of nodes associated with an Oracle home. It is important that during upgrade and patching, the inventory is correctly populated with the list of nodes.
+
+For more information, refer to Chapter 5, "Cluster Environment Installations".
+
+Updating the Nodes of a Cluster
+When you use the -updateNodeList flag with the Oracle Universal Installer, it gets the list of nodes and updates the inventory.xml. If the CRS tag is set to TRUE, then the Oraclehomeproperties.xml file is updated with the Oracle Clusterware home information. For shared Oracle homes, you need to use this with -cfs flag. The syntax is as follows:
+
+./runInstaller -updateNodeList "CLUSTER_NODES={node1,node2}" 
+ORACLE_HOME="<Oracle_Home_Location>" ORACLE_HOME_NAME="<Oracle_Home_Name>" 
+LOCAL_NODE="Node_Name"
+Note:
+
+You update the nodes of a cluster only under exceptional circumstances. Oracle recommends that you perform this operation with the help of Oracle support.
+Diagnosing and Recovering from RAC Oracle Home Inventory Corruption
+When you execute opatch lsinventory -detail or when you click Installed Products, the Oracle home appears, but the products and components within the Oracle home are not listed.
+
+Cause: This may result because of a missing or corrupted Oracle home inventory.
+
+Action: Do the following:
+
+1.Back up the Central and Local inventories of both CRS and RDBMS for all nodes.
+
+2.Rename or remove the Central Inventory on all nodes.
+
+3.Copy the Local Inventory from the node that is not corrupted to the node that is corrupted.
+
+4.Recreate the Central Inventory with the attachhome option as in My Oracle Support (formerlyMetaLink) note 413939.1, Steps to Recreate the Central Inventory in Real Application Clusters.
+
+5.Verify that opatch lsinventory functions correctly in both the CRS and RDBMS homes.
+
+Note:
+
+Copying the Local Inventory is supported only when patch sets and one-off patches applied are the same across all nodes.
+For information on recovering from non-RAC Oracle home inventory corruption, see "Diagnosing and Recovering from Oracle Home Inventory Corruption".
+
+Home Selector (Available on Win32 Platforms)The following sections describe the Home Selector, which is installed as part of Oracle Universal Installer on Windows computers.
+
+To view the Home Selector, click the Environment tab of the Inventory dialog, which appears when you click the Installed Products button on several Oracle Universal Installer screens.
+
+Home Selector Overview
+The Home Selector is a part of the installation software. The Home Selector enables you to easily change your primary Oracle home (the one that appears first in the PATH environment variable). If you need to switch the active home or need to perform batch work which requires a "default home" to be active, the Home Selector can be used to change the Windows NT system settings.
+
+When using the Home Selector to make a specific Oracle home the active one, the software installation in question is moved to the front of the PATH variable, making it the first directory to be scanned for executable and library files.
+
+Use the GUI in the Environment tab of the Inventory dialog to establish the order of Oracle homes in your PATH variable.
+
+How Home Selector Works
+When you perform an installation on a system, Oracle Universal Installer runs the selectHome.bat file to register the Oracle home you selected. In silent mode, you perform this outside Oracle Universal Installer. The first Oracle home will be named the "DEFAULT_HOME" and will register itself in the Windows NT registry under the key:
+
+HKEY_LOCAL_MACHINE
+   Software
+      Oracle
+This is the default Windows NT registry hive which contains all the "generic" Oracle settings. Also the PATH variable is adjusted and the BIN directory of the $ORACLE_HOME is added to the environment variable.
+
+Some additional parameters will also be written to the key:
+
+HKEY_LOCAL_MACHINE
+   Software
+      Oracle
+         KEY_<ORACLE_Home_Name>
+With Oracle Universal Installer, you can change the "DEFAULT_HOME" name to something else. Also, it registers all Oracle settings in the "KEY_<Home_NAME>" sub-key of the ORACLE key.
+
+When an additional Oracle home is added to the system, the PATH variable is adjusted again to add the new BIN directory of the newly installed Oracle software. The registry variables are written to a key named "KEY_<HOME_NAME>".
+
+Oracle Home Directory Structure for Windows Platforms
+A typical Oracle home on Windows platforms contains the files and directories shown in the following table.
+
+Table 2-4 Oracle Home Directory for Windows Platforms
+
+Oracle Home Directory Contents 
+\BIN
+ Product executable and DLLs
+ 
+\LIB
+ DLL files
+ 
+\JLIB
+ All JAR files
+ 
+\DBS
+ Common message files
+ 
+\PROD1
+ PROD1 product files
+ 
+\PROD2
+ PROD2 product files
+ 
+
+
+Optimal Flexible Architecture Directory Structure (on UNIX)The Optimal Flexible Architecture (OFA) standard is a set of configuration guidelines for fast, reliable Oracle databases that require little maintenance.
+
+OFA is designed to:
+
+•Organize large amounts of complicated software and data on disk to avoid device bottlenecks and poor performance
+
+•Facilitate routine administrative tasks such as software and data backup functions, which are often vulnerable to data corruption
+
+•Alleviate switching among multiple Oracle databases
+
+•Adequately manage and administer database growth
+
+•Help eliminate fragmentation of free space in the data dictionary, isolate other fragmentation, and minimize resource contention
+
+The OFA directory structure is described in the following section.
+
+ORACLE_BASE DirectoryORACLE_BASE specifies the BASE of the Oracle directory structure for OFA-compliant databases. A typical ORACLE_BASE directory structure is described in Table 2-5. When installing an OFA-compliant database using Oracle Universal Installer, ORACLE_BASE is set to /pm/app/oracle by default.
+
+Table 2-5 Sample ORACLE_BASE Directory Structure and Content
+
+Directory Content 
+admin
+ Administrative files
+ 
+doc
+ online documentation
+ 
+local
+ Sub-tree for local Oracle software
+ 
+product
+ Oracle software
+ 
+
+
+ORACLE_HOME Directory
+The following is an example of an Oracle Server Installation.
+
+If you install an OFA-compliant Oracle Server, the Oracle home directory is /mount_point/app/oracle/product/release_number. Oracle home directory structure and content are described in Table 2-6. Under UNIX, the Oracle home directory might contain the following subdirectories, as well as a subdirectory for each Oracle product selected.
+
+Note:
+
+The examples in this table are only samples. The directories that appear in your own Oracle home will depend on whether the corresponding products are installed and the version of the Oracle Database you are running.
+Table 2-6 Sample Oracle Home Directory Structure and Content
+
+Directory Content 
+assistants
+ configuration Assistants
+ 
+bin
+ binaries for all products
+ 
+ctx
+ interMedia Text cartridge
+ 
+dbs
+ initsid.ora, lksid
+ 
+install
+ install related files
+ 
+lib
+ Oracle product libraries
+ 
+jlib
+ Java classes
+ 
+md
+ Spatial cartridge
+ 
+mlx
+ Xerox Stemmer (for interMedia Text cartridge)
+ 
+network
+ Net8
+ 
+nlsrtl
+ NLS run-time loadable data
+ 
+ocommon
+ common files for all products
+ 
+odg
+ data gatherer
+ 
+opsm
+ Parallel Server Manager Components
+ 
+oracore
+ core libraries
+ 
+ord
+ data cartridges
+ 
+otrace
+ Oracle TRACE
+ 
+plsql
+ PL/SQL
+ 
+precomp
+ precompilers
+ 
+rdbms
+ server files and libraries required for the database
+ 
+slax
+ SLAX parser
+ 
+sqlplus
+ SQL*Plus
+ 
+
+
+
+--------------------------------------------------------------------------------
+
+Previous 
+Next 
+ 
+Copyright © 1996, 2010, Oracle and/or its affiliates. All rights reserved.
+Legal Notices 
+Home 
+Book List 
+Contents 
+Index 
+Master Index 
+Contact Us 
+ 

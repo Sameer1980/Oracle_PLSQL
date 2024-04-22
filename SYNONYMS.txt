@@ -1,0 +1,6 @@
+create synonym emp_priv_syn for employees
+
+PUBLIC SYNONYMS:
+1)grant select on employees to scott OR PUBLIC;
+2)LOG IN AS THE ADMIN.
+create public synonym emp_pub_syn for hr.employees;

@@ -1,0 +1,41 @@
+FIRST CREATE A FOLDER IN THE LOCAL FILE SYSTEM.  EG:Testloc
+
+FROM SYS:--
+CREATE DIRECTORY MYDIR AS 'C:\Testloc'
+GRANT READ , WRITE ON DIRECTORY MYDIR TO HR
+
+-----------------------------------------  WRITING TO A FILE -----------------------------------
+
+FROM HR:-
+
+declare
+l_handler utl_file.file_type;
+begin
+l_handler:=utl_file.fopen('MYDIR','SYS.TXT', 'W');
+utl_file.putf(l_handler,'UTL_FILE HELLO WORLD!!!!');
+utl_file.fclose(l_handler);
+end;
+
+-------------------------------------- READING FROM A FILE--------------------------------------
+
+set serveroutput on
+declare
+l_handler utl_file.file_type;
+v1 varchar2(200);
+begin
+l_handler:=utl_file.fopen('MYDIR','SYS.TXT', 'R');
+loop
+begin
+utl_file.get_line(l_handler,v1);
+dbms_output.put_line(v1);
+exception
+when no_data_found then exit;
+end;
+end loop;
+
+if utl_file.is_open(l_handler) then
+dbms_output.put_line('File is open');
+end if;
+
+utl_file.fclose(l_handler);
+end;

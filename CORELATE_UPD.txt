@@ -1,0 +1,3 @@
+update emp a
+set 
+department_name=(select department_name from departments where department_id=a.department_id)

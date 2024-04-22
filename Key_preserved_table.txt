@@ -1,0 +1,8 @@
+Key preserved table has its keys preserved through a sql join in a view .
+eg:
+
+create or replace view emp_vw as select a.employee_id,(a.first_name||' '||a.last_name) "Name",b.department_id,b.department_name from emp a , dept b 
+where a.department_id=b.department_id(+)
+
+dept table in the above view is a key preserved table because department_id col is participating in the sql join in the above view .
+Also primary key is defined on the department_id column.

@@ -1,0 +1,10 @@
+DELETE FROM CMS_TRANS
+      WHERE ROWID IN
+               (SELECT ROWID
+                  FROM CMS_TRANS T1
+                 WHERE EXISTS
+                          (SELECT 1
+                             FROM CMS_TRANS T2
+                            WHERE     T1.TRANS_CODE = T2.TRANS_CODE
+                                  AND T1.TRANS_DATE = T2.TRANS_DATE
+                                  AND T1.ROWID > T2.ROWID))

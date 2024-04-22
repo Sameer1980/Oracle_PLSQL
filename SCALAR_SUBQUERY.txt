@@ -1,0 +1,6 @@
+select employee_id,last_name,
+(
+case
+when department_id=
+(select department_id from departments where location_id=1800)
+then 'Canada' else 'USA' end)"location" from employees

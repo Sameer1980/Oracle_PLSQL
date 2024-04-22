@@ -1,0 +1,23 @@
+merge into emp2 e1 using employees e2
+on (e1.employee_id=e2.employee_id)
+when 
+matched 
+then update
+set
+e1.salary=e2.salary,
+e1.commission_pct=e2.commission_pct,
+e1.manager_id=e2.manager_id,
+e1.department_id=e2.department_id
+when not matched then insert  values(e2.employee_id,e2.first_name,e2.last_name,e2.email,e2.phone_number,e2.hire_date,e2.job_id,e2.salary,e2.commission_pct,
+e2.manager_id,e2.department_id)
+
+
+
+MERGE INTO EMP_2015 A 
+USING
+EMP B
+ON(A.EMPLOYEE_ID=B.EMPLOYEE_ID)
+WHEN MATCHED THEN UPDATE SET A.LAST_NAME=B.LAST_NAME
+WHEN NOT MATCHED THEN 
+INSERT (EMPLOYEE_ID,LAST_NAME)
+VALUES(B.EMPLOYEE_ID,B.LAST_NAME)

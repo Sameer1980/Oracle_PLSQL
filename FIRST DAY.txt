@@ -1,0 +1,8 @@
+select to_char(last_day(sysdate),'dd-mon-yy')"last day",
+to_char(last_day(to_char(sysdate-to_yminterval('0-1')))+1,'dd-mon-yy')"first day"
+ from dual
+
+
+SELECT TO_CHAR(LAST_DAY(SYSDATE),'DD-MON-YY') "LAST DAY",
+ TO_CHAR(TRUNC(SYSDATE,'MONTH'),'DD-MON-YY') "FIRST DAY"
+ FROM DUAL

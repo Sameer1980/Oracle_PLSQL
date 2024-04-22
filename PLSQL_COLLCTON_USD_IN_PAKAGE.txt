@@ -1,0 +1,24 @@
+create or replace package emp_pkg as                       
+procedure get_employees (dept_id employees.department_id%type);
+--type emp_tabtype is table of employees%rowtype index by binary_integer;
+procedure show_employees;  
+end;
+
+
+create or replace package body emp_pkg as
+type emp_tabtype is table of employees%rowtype index by binary_integer;
+emps emp_tabtype;
+--emp_table emps%rowtype;
+procedure get_employees (dept_id employees.department_id%type) as
+begin
+select * bulk collect into emps from employees where department_id=dept_id;
+end;
+
+procedure show_employees as
+begin
+for i in emps.first .. emps.last loop
+dbms_output.put_line('Employee ID: '||emps(i).employee_id||' '||emps(i).first_name||' '||emps(i).last_name||' '||'Department ID:'||emps(i).department_id);
+end loop;
+end;
+end;
+                                              

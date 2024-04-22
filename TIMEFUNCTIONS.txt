@@ -1,0 +1,41 @@
+SELECT SYSDATE,
+ CURRENT_DATE,
+ CURRENT_TIMESTAMP,
+ LOCALTIMESTAMP,
+ SESSIONTIMEZONE,
+ DBTIMEZONE,
+ EXTRACT(YEAR FROM SYSDATE) "YEAR",
+ EXTRACT(MONTH FROM SYSDATE) "MONTH",
+ TZ_OFFSET('Asia/Calcutta') "TIMEZONE",
+ TO_CHAR(SYSDATE+TO_YMINTERVAL('1-0'),'DD-MON-YYYY')"TIMEINTERVAL1",
+ TO_CHAR(SYSDATE+TO_DSINTERVAL('01 01:10:00'),'DD-MON-YYYY HH24:MI:SS')"TIMEINTERVAL2",
+FROM_TZ(TIMESTAMP '2013-09-23 22:17:00','Asia/Calcutta'),
+TZ_OFFSET('Asia/Calcutta') 
+ FROM DUAL      
+ 
+
+SELECT * FROM V$TIMEZONE_NAMES
+
+
+
+INSERT INTO WARRANTY VALUES(50,INTERVAL '6' MONTH)
+
+ALTER TABLE WARRANTY ADD DS_TIME INTERVAL DAY TO SECOND
+
+INSERT INTO WARRANTY VALUES(60,NULL,'01 10:10:00')
+
+
+
+
+create table shipping (delivery_time     timestamp with local time zone)
+
+insert into shipping values(current_timestamp+2);
+
+select * from shipping;
+alter session set time_zone='EUROPE/LONDON'
+
+SELECT * FROM SHIPPING;
+
+
+
+alter session set time_zone='Asia/Calcutta'

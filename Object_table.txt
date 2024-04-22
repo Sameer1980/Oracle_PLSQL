@@ -1,0 +1,8 @@
+CREATE TYPE department_typ AS OBJECT
+( d_name VARCHAR2(100),
+d_address VARCHAR2(200) );
+
+CREATE TABLE departments_obj_t OF department_typ;
+
+INSERT INTO departments_obj_t
+VALUES ('hr', '10 Main St, Sometown, CA');

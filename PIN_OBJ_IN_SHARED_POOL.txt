@@ -1,0 +1,7 @@
+@C:\oraclexe\app\oracle\product\11.2.0\server\rdbms\admin\dbmspool.sql
+
+THE DBMS_SHARED_POOL package is not loaded by default so it must be loaded manually by running the dbmspool.sql script as the SYS user.
+
+THE OBJECT IS PINNED IN THE SHARED POOL AND REMOVED FROM THE LRU LIST SO THAT THEY ARE NEVER AGED OUT.
+
+

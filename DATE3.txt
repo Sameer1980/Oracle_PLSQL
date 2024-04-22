@@ -1,0 +1,6 @@
+select
+ first_name||' '||last_name "NAME",
+ to_char(to_date(hire_date,'dd-mm-rr'),'Dd-Mon-yyyy') hire_date,
+ TO_CHAR(NEXT_DAY(ADD_MONTHS(TO_DATE(HIRE_DATE,'DD-MM-RR'),6),'MONDAY'),'Day, "the" Ddthsp "of" Month,yyyy') "Review"
+ from 
+ employees

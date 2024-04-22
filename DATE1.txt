@@ -1,0 +1,6 @@
+select first_name||' '||last_name,
+ to_char(to_date(hire_date,'dd-mm-rr'),'Dd-Mon-yyyy') hire_date,
+ to_char(to_date(hire_date,'dd-mm-rr'),'DAY') "DAY"
+ from 
+ employees 
+ order by    to_char(to_date(hire_date,'dd-mm-rr')-1,'D')  

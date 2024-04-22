@@ -1,0 +1,52 @@
+----------PIVOTING INSERT.... 1)
+insert all 
+into emp2(employee_id,first_name,last_name,email,hire_date,job_id,salary,commission_pct,manager_id,department_id)
+values(207,'A','A+','A@COM',SYSDATE,'IT',50000,NULL,NULL,NULL)
+
+into emp2(employee_id,first_name,last_name,email,hire_date,job_id,salary,commission_pct,manager_id,department_id)
+values(208,'B','B+','B@COM',SYSDATE,'IT',50000,NULL,NULL,NULL)
+
+
+into emp2(employee_id,first_name,last_name,email,hire_date,job_id,salary,commission_pct,manager_id,department_id)
+values(209,'C','C+','C@COM',SYSDATE,'IT',50000,NULL,NULL,NULL)
+
+into emp2(employee_id,first_name,last_name,email,hire_date,job_id,salary,commission_pct,manager_id,department_id)
+values(210,'D','D+','D@COM',SYSDATE,'IT',50000,NULL,NULL,NULL)
+
+SELECT * FROM DUAL
+
+
+2)
+INSERT ALL 
+INTO SALES_INFO VALUES(EMPLOYEE_ID,WEEK_ID,SALES_MON)
+INTO SALES_INFO VALUES(EMPLOYEE_ID,WEEK_ID,SALES_TUE)
+INTO SALES_INFO VALUES(EMPLOYEE_ID,WEEK_ID,SALES_WED)
+INTO SALES_INFO VALUES(EMPLOYEE_ID,WEEK_ID,SALES_THUR)
+INTO SALES_INFO VALUES(EMPLOYEE_ID,WEEK_ID,SALES_FRI)
+SELECT * FROM SALES_SOURCE_DATA
+
+-------------------conditional insert all
+insert all
+when sal>10000 then 
+into sal_history values(empid,hrd,sal)
+when mgr>200 then 
+into mgr_history values(empid,mgr,sal) 
+
+select employee_id EMPID,hire_date HRD,salary SAL,manager_id MGR from employees where employee_id>120
+
+
+----------------------conditional insert first
+
+insert first
+when sal>25000 then
+into special_sal values(deptid,sal)
+when hiredate like ('%00%') then
+into hiredate_history_00 values(deptid,hiredate)
+when hiredate like ('%99%') then
+into hiredate_history_99 values(deptid,hiredate)
+else
+into  hiredate_history values(deptid,hiredate)
+
+select department_id deptid,max(hire_date) hiredate,sum(salary) sal from employees group by department_id 
+
+

@@ -1,0 +1,11 @@
+select
+last_name,
+to_char(to_date(hire_date,'dd-mm-rr'),'dd-mon-yy') "Hire Date",
+to_char(to_date(sysdate,'dd-mm-rr'),'dd-mon-yy') "sysdate",
+(case when (sysdate-to_yminterval('15-0'))>=hire_date then '15 years of service'
+                when (sysdate-to_yminterval('10-0'))>=hire_date then '10 years of service'
+                when (sysdate-to_yminterval('5-0'))>=hire_date then '5 years of service'
+                else 'maybe next year!'
+                end) "Awards"
+                from employees
+                order by 2

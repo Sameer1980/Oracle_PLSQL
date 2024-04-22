@@ -1,0 +1,1 @@
+select last_name,(sysdate-hire_date)/7 as weeks from employees

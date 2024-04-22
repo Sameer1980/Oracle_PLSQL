@@ -1,0 +1,15 @@
+update emp2 set salary=50000 where employee_id=206
+
+SELECT VERSIONS_STARTTIME "START_DATE",VERSIONS_ENDTIME "END_DATE",SALARY FROM EMP2 VERSIONS BETWEEN SCN MINVALUE AND MAXVALUE WHERE
+ EMPLOYEE_ID=206 
+
+
+
+
+SELECT * FROM EMP2  AS OF TIMESTAMP TO_TIMESTAMP('2013-10-20 19:20:00','YYYY-MM-DD HH24:MI:SS')
+ WHERE employee_id=206
+
+
+select
+ to_char(sysdate,'dd-mm-yyyy  hh24:mi:ss') ddate,
+dbms_flashback.get_system_change_number() scn from dual; --------------------------------- FROM SYS ACCOUNT

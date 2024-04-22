@@ -1,0 +1,4 @@
+select distinct name
+  from dba_source
+  where owner = 'SYS'
+  and type = 'PACKAGE'

@@ -1,0 +1,5 @@
+select
+department_id,
+listagg(first_name||' '||last_name,',') within group (order by last_name)"Name"
+from employees 
+group by department_id

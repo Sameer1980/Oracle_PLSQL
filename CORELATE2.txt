@@ -1,0 +1,8 @@
+select last_name from employees a where 
+exists
+(select 'x'
+from employees b where b.department_id=a.department_id
+and
+b.hire_date>a.hire_date
+and
+b.salary>a.salary)

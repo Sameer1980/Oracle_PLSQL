@@ -1,0 +1,9 @@
+select 
+job_id,
+sum(decode(department_id,20,salary,null))Dept20,
+sum(decode(department_id,50,salary,null))Dept50,
+sum(decode(department_id,80,salary,null))Dept80,
+sum(decode(department_id,90,salary,null))Dept90,
+sum(salary) Total
+from employees
+group by job_id
